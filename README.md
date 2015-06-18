@@ -1,3 +1,4 @@
 # Trekking-Poutnik Brouter profile
 
-Template for configured variants of trekking bike profile for  Brouter routing application 9 atandalone + 3rd party routing modul for OSMAnd/Locus/Oruxmaps ) for Android.
+Template for configured end user variants of Trekking bike profiles https://github.com/poutnikl/Brouter-profiles
+for  Brouter routing application (Android atandalone + 3rd party routing modul for OSMAnd/Locus/Oruxmaps ) for Android.
