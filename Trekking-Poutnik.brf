@@ -234,13 +234,11 @@ assign rawcostfactor # can be <1, adjusted to >=1 in final step of calculation o
   cost_of_unknown # above highway tags do not apply
   
    assign rawcostfactor2  
-            if ( equal cycleroutes_pref 0.0 )  then  			   rawcostfactor 							# ignore cycleroutes
-			else if ( not nodeaccessgranted  ) then 			   add rawcostfactor  cycleroutes_pref      # is not a cycleroute
-            else if  is_ldcr                   then				   multiply rawcostfactor  network_coef     # is a considered cycleroute
-			else												   rawcostfactor                            # is a not considered cycleroute  
-		   
+        if equal cycleroutes_pref 0.0 		then	rawcostfactor 				# ignore cycleroutes
+	else if not nodeaccessgranted	  	then	add rawcostfactor  cycleroutes_pref     # is not a cycleroute
+        else if is_ldcr				then	multiply rawcostfactor  network_coef    # is a considered cycleroute
+	else					rawcostfactor					# is a not considered cycleroute  
 
-			
             
   assign costfactor  # calculations may provide illegal costfactor < 1
     max 1.0 rawcostfactor2
