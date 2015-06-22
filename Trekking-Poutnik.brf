@@ -104,8 +104,8 @@ assign mtbscalepenalty  if not consider_smoothness then 0.0 else
 # Low values for low levels are used to avoid  double penalting because of grade=*/surface=*
 # Remember this is for trekking bikes, not MTB
 
-if mtb:scale=        then 0.0 else   if mtb:scale=0-      then 0.1 else
-if mtb:scale=0       then 0.2 else   if mtb:scale=0+      then 0.4 else
+if mtb:scale=        then 0.0 else   if mtb:scale=0-      then 0.0 else
+if mtb:scale=0       then 0.0 else   if mtb:scale=0+      then 0.4 else
 if mtb:scale=1-      then 0.8 else   if mtb:scale=1       then 1.2 else
 if mtb:scale=1+      then 1.8 else   if mtb:scale=2-      then 2.5 else
 if mtb:scale=2       then 4.0 else   if mtb:scale=2+      then 5.5 else
