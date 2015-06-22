@@ -167,11 +167,26 @@ assign MTB_factor_for_road
       else if ( isunpaved )     then ( multiply -1 multiply MTB_factor ( add 1.0 ( multiply 0.33 roughnesspenalty ) ) )
       else                            0.0	 )
 
+#partialy overtaken from Hiking , values not valid yet nor the whole system 
+
+assign  trackclass_penalty (
+	if not istrack then 0.0
+	else if highway=track then 0.0
+	else if tracktype=grade1 then 0.0
+	else if tracktype=grade2 then 0.1
+	else if tracktype=grade3 then 0.2
+	else if tracktype=grade4 then 0.4
+	else if tracktype=grade5 then 0.8 )
+
+
 assign tracktype_penalty (
-	if not istrack then 0.0 else if tracktype= then 0.0
-	else if tracktype=grade1 then 0.1 else if tracktype=grade2 then 0.05
-	else if tracktype=grade3 then 0.0 else if tracktype=grade4 then 0.0
-	else if tracktype=grade5 then 0.0 else 0.0 )
+	if not istrack then 0.0
+	else if tracktype= then 0.0
+	else if tracktype=grade1 then 0.0
+	else if tracktype=grade2 then 0.1
+	else if tracktype=grade3 then 0.2
+	else if tracktype=grade4 then 0.4
+	else if tracktype=grade5 then 0.8 )
 
 assign surface_penalty (
 	if not istrack then 0.0
@@ -262,9 +277,9 @@ assign rawcostfactor # can be <1, adjusted to >=1 in final step of calculation o
   cost_of_unknown # above highway tags do not apply
   
    assign rawcostfactor2  
-        if equal cycleroutes_pref 0.0 		then	rawcostfactor 				# ignore cycleroutes
+	if equal cycleroutes_pref 0.0 		then	rawcostfactor 				# ignore cycleroutes
 	else if not nodeaccessgranted	  	then	add rawcostfactor  cycleroutes_pref     # is not a cycleroute
-        else if is_ldcr				then	multiply rawcostfactor  network_coef    # is a considered cycleroute
+    else if is_ldcr				then	multiply rawcostfactor  network_coef    # is a considered cycleroute
 	else					rawcostfactor					# is a not considered cycleroute  
 
             
@@ -276,8 +291,8 @@ assign rawcostfactor # can be <1, adjusted to >=1 in final step of calculation o
   assign uphillcostfactor = 
 	max 1.0  add rawcostfactor2 
                               if   ismainroad                         then 0.1 
-                              else if ispaved                         then -0.1
-                              else if surface=gravel|pebblestone      then 0.3
+                              else if ispaved                         then 0.0
+                              else if surface=gravel|pebblestone      then 0.2
                               else if ismuddy                         then 0.2   
                               else if isunpaved                       then 0.1   
                               else                                         0.0
@@ -285,13 +300,12 @@ assign rawcostfactor # can be <1, adjusted to >=1 in final step of calculation o
 
   assign downhillcostfactor =
 	max 1.0  add rawcostfactor2
-                              if      ismainroad                      then -0.2  
-                              else if ispaved                         then -0.2  
+                              if   or ismainroad ispaved              then 0.0  
                               else if surface=gravel|pebblestone|sand then 0.5
                               else if ismuddy                         then 0.5  
                               else if and iswet surface=cobblestone   then 0.2
-                              else if isunpaved                       then 0.1
-	                          else                                         0.0
+                              else if not isunpaved                   then 0.1
+	                          else                                         0.2
                               
 
 ---context:node  # following code refers to node tags
