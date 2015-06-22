@@ -15,7 +15,7 @@ assign   cycleroutes_pref     0.1 # **) costfactor penalty for not being cyclero
 assign   routelevel           2 # *****)  default =2, 1-icn only, 2 +ncn, 3 +rcn, 4 all
 
 assign   MTB_factor           0.0 # default 0.0, recommended -0.5 - +1.0, reasonable -2.0 .. +3.0, "+" promotes bad roads, penalizes mainroads, "-" the oposite  ****)
-assign   hills                1 # 0 as default, 0=trekking profile default, 1=avoid steep >3.0 hills, 2= avoid all slopes, 3= simulates ascend/length time equivalent
+assign   hills                0 # 0 as default, 0=trekking profile default, 1=avoid steep >3.0 hills, 2= avoid all slopes, 3= simulates ascend/length time equivalent
  
 assign   use_proposed_cn      1 # 0 as default, considers proposed cycle networks as unmarked but valid cycleroutes.
 assign   avoid_unsafe         0 # 0 as default, gives penalty to road without bike friendly status.
