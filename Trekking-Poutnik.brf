@@ -178,6 +178,16 @@ assign  trackclass_penalty (
 	else 0.0
 	 )
 
+assign  no_bike_hint_track_penalty (
+	if isbike then 0.0
+	else if not istrack then 0.0
+	else if ispaved then then 0.0
+	else if not isunpaved then 0.2
+	else if surface= then 0.2
+	else if isunpaved then 0.5
+	else if highway=footway then ( if footway=sidewalk then 4.0 else 0.5 )
+	else 0.0
+	 )
 
 assign tracktype_penalty (
 	if not istrack then 0.0
