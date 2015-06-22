@@ -86,8 +86,17 @@ assign ismuddy and or isunpaved surface=
 assign turncost       if  ismainroad  then 90    else if ispaved then 60   else 30
 # Turn cost is based solely on estimation of road speediness and eventual time cost of turning, partially promoting tracks )
                       
-
-
+assign initialclassifier
+if route=ferry then 1
+else if ( highway=motorway|motorway_link|trunk|trunk_link )	then 2
+else if ( highway=primary|primary_link )                	then 3
+else if ( highway=secondary|secondary_link )            	then 4
+else if ( highway=tertiary|tertiary_link|unclassified ) 	then 5
+else if ( highway=residential   )				then 6
+else if ( highway=living_street  )				then 7
+else if ( highway=service   )     				then 8
+else if or istrack highway=cycleway		    		then 9
+else 10
 
 assign initialcost
 if route=ferry then 10000
@@ -411,4 +420,6 @@ assign initialcost =
 # Version 2.1.10 ALFA - * increased smoothness penalties 
 # Version 2.1.11 RELEASE- * modified MTB and smoothness penalties 
 # Version 2.2.1 ALFA - * Track costfactors penalty driven now
-# Version 2.2.2 ALFA - * highway=path penalty for downhill, * up/downhill costafactor , modified cycloroute preferencing / 15.6.2015
+# Version 2.2.2 ALFA - * highway=path penalty for downhill, * up/downhill costafactor , modified cycloroute preferencing 
+# Version 2.2.3 ALFA - + initialclassifier
+
