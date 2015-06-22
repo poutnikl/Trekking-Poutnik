@@ -273,8 +273,9 @@ if istrack then ( 	add 1.0 add trackclass_penalty
   assign uphillcostfactor = 
 	max 1.0  add rawcostfactor2 
 	if   ismainroad                         then 0.1 
-	else if highway=path                    then 0.2
-        else if surface=gravel|pebblestone      then 0.3
+	else if highway=residential|living_street then -0.1 
+	else if ispaved				then -0.1
+        else if surface=gravel|pebblestone      then 0.2
         else if ismuddy                         then 0.2   
         else if isunpaved                       then 0.1   
         else                                         0.0
@@ -282,18 +283,20 @@ if istrack then ( 	add 1.0 add trackclass_penalty
 
   assign downhillcostfactor =
 	max 1.0  add rawcostfactor2
-	if   ismainroad                         then 0.0
-	else if  ispaved			then 0.0 
-        else if highway=path                    then 0.8
-	else if tracktype=grade5                then 0.8
-	else if tracktype=grade4                then 0.6
-	else if surface=gravel|pebblestone|sand then 0.5
+	if   ismainroad                         then -0.1
+	else if  highway=residential|living_street then 0.1
+	else if  ispaved			then -0.1
+	else if surface=gravel|pebblestone	then 0.5
+	else if surface=fine_gravel|sand	then 0.4
         else if ismuddy                         then 0.5  
-        else if tracktype=grade3                then 0.4
-        else if and iswet surface=cobblestone   then 0.2
-        else if tracktype=grade2                then 0.2
+        else if tracktype=grade5                then 0.4
+	else if tracktype=grade4                then 0.3
+	else if highway=path|footway		then 0.2
+        else if tracktype=grade3                then 0.2
+        else if surface=cobblestone   then if iswet then 0.3 else 0.1
+        else if tracktype=grade2                then 0.1
         else if isunpaved               	then 0.2
-	else                                    0.1
+	else                                    0.0
                               
 
 ---context:node  # following code refers to node tags
@@ -321,7 +324,7 @@ assign footaccess =
 
 
 assign initialcost =
-        add ( if highway=traffic_signals then 200 else if highway=stop   then 50 else initial_cost_node )
+        # add ( if highway=traffic_signals then 200 else if highway=stop   then 50 else initial_cost_node )
             if bikeaccess then 0  else ( if footaccess then 100 else 1000000 )
 
 ############################################################################################
