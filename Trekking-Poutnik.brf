@@ -275,12 +275,12 @@ if istrack then ( 	add 1.0 add trackclass_penalty
 	max 1.0  add rawcostfactor2
 	if   ismainroad                         then 0.0
 	else if  ispaved			then 0.0 
-        else if highway=path                    then 1.0
-	else if tracktype=grade5                then 1.0
-	else if tracktype=grade4                then 0.8
-	else if tracktype=grade3                then 0.5
-        else if surface=gravel|pebblestone|sand then 0.5
+        else if highway=path                    then 0.8
+	else if tracktype=grade5                then 0.8
+	else if tracktype=grade4                then 0.6
+	else if surface=gravel|pebblestone|sand then 0.5
         else if ismuddy                         then 0.5  
+        else if tracktype=grade3                then 0.4
         else if and iswet surface=cobblestone   then 0.2
         else if tracktype=grade2                then 0.2
         else if isunpaved               	then 0.2
