@@ -156,7 +156,7 @@ assign mtb_scale_penalty  if not consider_smoothness then 0.0 else
 
 # Remember this is for trekking bikes, not MTB. There are MTB dedicated profiles.
 
-if mtb:scale=        then 0.0 else   if mtb:scale=0-      then 0.1 else
+if mtb:scale=        then 0.0 else   if mtb:scale=0-      then 0.0 else
 if mtb:scale=0       then 0.0 else   if mtb:scale=0+      then 0.3 else
 if mtb:scale=1-      then 0.7 else   if mtb:scale=1       then 1.2 else
 if mtb:scale=1+      then 1.8 else   if mtb:scale=2-      then 2.5 else
