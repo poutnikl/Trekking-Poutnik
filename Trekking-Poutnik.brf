@@ -142,7 +142,7 @@ assign onewaypenalty
 assign smoothness_penalty  
 # http://wiki.openstreetmap.org/wiki/Key:smoothness
 
-if not consider_smoothnes				  then 0.0 else
+if not consider_smoothness				  then 0.0 else
 if smoothness=                                            then 0.0 else
 if smoothness=excellent|very_good|good                    then 0.0 else
 if smoothness=intermediate                                then 0.1 else
