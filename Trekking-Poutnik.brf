@@ -139,22 +139,24 @@ assign onewaypenalty
        else   0.0
 
 
-assign smoothness_penalty  if not consider_smoothness then 0.0 else
+assign smoothness_penalty  
+# http://wiki.openstreetmap.org/wiki/Key:smoothness
 
-
+if not consider_smoothnes				  then 0.0 else
 if smoothness=                                            then 0.0 else
 if smoothness=excellent|very_good|good                    then 0.0 else
 if smoothness=intermediate                                then 0.1 else
 if smoothness=bad|robust_wheels                           then 0.2 else
 if smoothness=very_bad|high_clearance                     then 0.5 else
-if smoothness=horrible|off_road_wheels                    then 1.0 else
-if smoothness=very_horrible                               then 2.0 else
-if smoothness=impassable                                  then 4.0 else
+if smoothness=horrible|off_road_wheels                    then 1.5 else
+if smoothness=very_horrible                               then 4.0 else
+if smoothness=impassable                                  then 8.0 else
 0.0
 
 assign mtb_scale_penalty  if not consider_smoothness then 0.0 else
 
 # Remember this is for trekking bikes, not MTB. There are MTB dedicated profiles.
+# http://wiki.openstreetmap.org/wiki/Key:mtb:scale
 
 if mtb:scale=        then 0.0 else   if mtb:scale=0-      then 0.0 else
 if mtb:scale=0       then 0.0 else   if mtb:scale=0+      then 0.3 else
