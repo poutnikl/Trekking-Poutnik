@@ -16,9 +16,11 @@ assign   routelevel           2 # *****)  default =2, 1-icn only, 2 +ncn, 3 +rcn
 
 assign   MTB_factor           0.0 # default 0.0, recommended -0.5 - +1.0, reasonable -2.0 .. +3.0, "+" promotes bad roads, penalizes mainroads, "-" the oposite  ****)
 assign   hills                1 # 1 as default, 0=trekking profile default, 1=avoid steep >3.0 hills, 2= avoid all slopes, 3= simulates ascend/length time equivalent
- 
+
 assign   use_proposed_cn      1 # 0 as default, considers proposed cycle networks as unmarked but valid cycleroutes.
 assign   avoid_unsafe         0 # 0 as default, gives penalty to road without bike friendly status.
+
+# Internal parameters
 
 assign   uphillcostvalue	  switch equal hills 2  80  switch equal hills 1 70  switch equal hills 3   60  0 
 assign   uphillcutoffvalue	  switch equal hills 2  1.0 switch equal hills 1 3.0 switch equal hills 3  0.5  1.5 
@@ -29,15 +31,19 @@ assign   elevationpenaltybuffer 7   # 5 as default
 assign   elevationmaxbuffer     13  # 10 as default
 assign   elevationbufferreduce  switch equal hills 2 0.5   switch equal hills 1 0.8   switch equal hills 3  0.5      0.5 # 
 
-# Internal parameters
-
 assign   validForBikes        1
 
-assign   downhillcost if ( and consider_elevation set_downhill_cost )  then downhillcostvalue else 0
-assign   uphillcost   if ( and consider_elevation set_uphill_cost   )  then uphillcostvalue  else 0
+assign   MTB_hillcostfactor   multiply -0.333 ( max -3.0 ( multiply -1.0 ( max 0.0 MTB_factor ) ) )
+			      # progressively decreases hillcosts to be 0.0 at MTB_factor = 3.0
+			      # if MTB_factor = 1 , then downhillcost decreases e.g. from 60 to 40
+assign   MTB_hillcutfactor   multiply MTB_hillcostfactor 3.0
+assign   downhillcost if ( and consider_elevation set_downhill_cost )  then 
+        ( multiply ( add 1.0 ( multiply MTB_hillcostfactor -1.0 ) ) downhillcostvalue ) else 0
+assign   uphillcost   if ( and consider_elevation set_uphill_cost   )  then
+	( multiply ( add 1.0 ( multiply MTB_hillcostfactor -1.0 ) ) uphillcostvalue ) else 0
 
-assign   uphillcutoff    if ( and consider_elevation set_uphill_cost )   then    uphillcutoffvalue else 1.5
-assign   downhillcutoff  if ( and consider_elevation set_downhill_cost ) then  downhillcutoffvalue else 1.5 
+assign   uphillcutoff    add MTB_hillcutfactor if ( and consider_elevation set_uphill_cost )   then    uphillcutoffvalue else 1.5
+assign   downhillcutoff  add MTB_hillcutfactor if ( and consider_elevation set_downhill_cost ) then  downhillcutoffvalue else 1.5 
 
 assign	network_coef		add 1.0 ( multiply -1.0 cycleroutes_pref )  
 
@@ -432,5 +438,5 @@ assign initialcost =
 # Version 2.1.11 RELEASE- * modified MTB and smoothness penalties 
 # Version 2.2.1 ALFA - * Track costfactors penalty driven now
 # Version 2.2.2 ALFA - * highway=path penalty for downhill, * up/downhill costafactor , modified cycloroute preferencing 
-# Version 2.2.3 ALFA - + initialclassifier
-
+# Version 2.2.3 ALFA - + initialclassifier + tweakeked track penalties
+# Version 2.2.4 ALFA - + MTB factor affects hillcosts/cutoffs
