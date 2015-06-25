@@ -338,7 +338,10 @@ assign footaccess =
 
 
 assign initialcost =
-        # add ( if highway=traffic_signals then 200 else if highway=stop   then 50 else initial_cost_node )
+        add ( if highway=traffic_signals then 200 
+              else if highway=stop  then 50 
+              else if and highway=crossing bicycle=no then 60 
+              else initial_cost_node )
             if bikeaccess then 0  else ( if footaccess then 100 else 1000000 )
 
 ############################################################################################
