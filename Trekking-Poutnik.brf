@@ -243,8 +243,8 @@ assign rawcostfactor # can be <1, adjusted to >=1 in final step of calculation o
   switch    highway=pedestrian                        switch ismuddy 5 3
   switch    highway=bridleway                         switch ismuddy 8 5
   switch    highway=cycleway                          1.0
-  switch    highway=residential|living_street         switch ispaved 1.1 1.3
-  switch    highway=service                           switch ispaved 1.3 1.5
+  switch    highway=residential|living_street         switch ismuddy 1.5 isunpaved 1.3 1.1
+  switch    highway=service                           switch ismuddy 1.8 isunpaved 1.5 1.3
 
 
 if istrack then ( 	add 1.0 add trackclass_penalty
@@ -264,11 +264,11 @@ if istrack then ( 	add 1.0 add trackclass_penalty
 
   switch highway=motorway|motorway_link|proposed|abandoned|construction  100000
   
-  switch highway=trunk|trunk_link          ( switch isbike 1.5 switch iswet 5 10 )
-  switch highway=primary|primary_link      ( switch isbike 1.2 switch iswet 2 3 )
-  switch highway=secondary|secondary_link  ( switch isbike 1.1 switch iswet 1.35 1.6 )
-  switch highway=tertiary|tertiary_link    ( switch isbike 1.0 switch iswet 1.2 1.4 )
-  switch highway=unclassified              ( switch isbike 1.0 switch iswet 1.15 1.3 )
+  switch highway=trunk|trunk_link          ( switch isbike switch iswet 1.5 1.8 switch iswet 5 10 )
+  switch highway=primary|primary_link      ( switch isbike switch iswet 1.2 1.5 switch iswet 2 3 )
+  switch highway=secondary|secondary_link  ( switch isbike switch iswet 1.1 1.2 switch iswet 1.4 1.6 )
+  switch highway=tertiary|tertiary_link    ( switch isbike switch iswet 1.0 1.1 switch iswet 1.2 1.4 )
+  switch highway=unclassified              ( switch isbike switch iswet 1.0 1.0 switch iswet 1.15 1.3 )
  
   cost_of_unknown # above highway tags do not apply
   
@@ -446,3 +446,4 @@ assign initialcost =
 # Version 2.2.4 ALFA - + MTB factor affects hillcosts/cutoffs
 # Version 2.2.5 ALFA - * synced with 2.1.14 RELEASE - but Track penalty systemor affects hillcosts/cutoffs
 # Version 2.2.6 ALFA - * modified node initial cost, addressing some highway=crossing issues
+# Version 2.2.7 ALFA - * Tweaked mainroad + residental costfactors
