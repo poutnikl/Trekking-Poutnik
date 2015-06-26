@@ -271,7 +271,7 @@ if istrack then ( 	add 1.0 add trackclass_penalty
   switch highway=unclassified              ( switch isbike switch iswet 1.0 1.0 switch iswet 1.15 1.3 )
  
   cost_of_unknown # above highway tags do not apply
-  
+   
   assign rawcostfactor2  
 	if ( equal cycleroutes_pref 0.0 )  then rawcostfactor						# ignore cycleroutes
 	else if ( not nodeaccessgranted  ) then multiply rawcostfactor add 1.0 cycleroutes_pref		# is not a cycleroute
