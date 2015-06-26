@@ -444,3 +444,4 @@ assign initialcost =
 # Version 2.2.3 ALFA - + initialclassifier + tweakeked track penalties
 # Version 2.2.4 ALFA - + MTB factor affects hillcosts/cutoffs
 # Version 2.2.5 ALFA - * synced with 2.1.14 RELEASE - but Track penalty systemor affects hillcosts/cutoffs
+# Version 2.2.6 ALFA - * modified node initial cost, addressing some highway=crossing issues
