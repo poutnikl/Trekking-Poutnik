@@ -341,6 +341,7 @@ assign initialcost =
         add ( if highway=traffic_signals then 120 
               else if highway=stop  then 60 
               else if and highway=crossing bicycle=no then 60 
+              else if and highway=crossing crossing=no then 300 # workaround affecting road routing
               else initial_cost_node )
             if bikeaccess then 0  else ( if footaccess then 100 else 1000000 )
 
