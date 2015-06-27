@@ -182,7 +182,7 @@ assign MTB_factor_for_road
   if  ( equal MTB_factor 0.0 ) then 0.0 
     else 
     ( if      ( ismainroad ) 								then ( MTB_factor )  
-      else if ( or ispaved highway=residental|libing_street|service|pedestrian )	then ( multiply 0.33 MTB_factor )   
+      else if ( or ispaved highway=residential|living_street|service|pedestrian )	then ( multiply 0.33 MTB_factor )   
       else if ( not isunpaved ) 							then ( multiply -0.33 MTB_factor )   
       else  ( multiply -1 multiply MTB_factor ( add 1.0 ( multiply 0.33 roughness_penalty ) ) )
     )
