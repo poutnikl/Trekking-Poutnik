@@ -450,3 +450,4 @@ assign initialcost =
 # Version 2.2.5 ALFA - * synced with 2.1.14 RELEASE - but Track penalty systemor affects hillcosts/cutoffs
 # Version 2.2.6 ALFA - * modified node initial cost, addressing some highway=crossing issues
 # Version 2.2.7 ALFA - * Tweaked mainroad + residental costfactors
+# Version 2.2.8 ALFA - * backporting to 2.1 Release
