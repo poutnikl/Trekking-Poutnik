@@ -302,7 +302,11 @@ if istrack then ( 	add 1.0
    
   assign rawcostfactor2  
 	if ( equal cycleroutes_pref 0.0 )  then rawcostfactor						# ignore cycleroutes
-	else if ( not nodeaccessgranted  ) then multiply rawcostfactor no_network_coef			# is not a cycleroute
+	else if ( not nodeaccessgranted  ) then add (	multiply rawcostfactor no_network_coef )
+						    (	multiply -1.0 ( multiply cycleroutes_pref network_coef ) )
+						# is not a cycleroute
+						# rawcostfactor2 = rawcostfactor * no_network_coef - cycleroutes_pref * network_coef
+						# CF2 = CF * ( 1 + crp ) - crp * ( 1- crp )  
         else if is_ldcr	                   then multiply rawcostfactor network_coef			# is a considered cycleroute
 	else				   rawcostfactor						# is a not considered cycleroute  
 			
@@ -481,3 +485,4 @@ assign initialcost =
 #                      * partial penalty values changed, to follow different approach
 # Version 2.3.1 ALFA - * Tweaked Track penalties, * tweaked Rougness penalties
 # Version 2.3.2 ALFA - * Tweaked Track penalties, * rearranging general context code
+# Version 2.3.3 ALFA - * Tweaked Cycleroute preferencing to nonlinear progressive penalizing
