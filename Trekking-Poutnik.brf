@@ -11,7 +11,7 @@ assign   set_downhill_cost    1 # 1 as default
 assign   allow_steps          1 # 1 as default
 assign   allow_ferries        1 # 1 as default
 
-assign   cycleroutes_pref     0.1 # **) costfactor penalty for not being cycleroute
+assign   cycleroutes_pref     0.2 # **) costfactor penalty for not being cycleroute
 assign   routelevel           2 # *****)  default =2, 1-icn only, 2 +ncn, 3 +rcn, 4 all
 
 assign   MTB_factor           0.0 # default 0.0, recommended -0.5 - +1.0, reasonable -2.0 .. +3.0, "+" promotes bad roads, penalizes mainroads, "-" the oposite  ****)
@@ -22,11 +22,11 @@ assign   avoid_unsafe         0 # 0 as default, gives penalty to road without bi
 
 # Internal parameters
 
-assign   uphillcostvalue	    switch equal hills 1 70
+assign   uphillcostvalue	switch equal hills 1 70
                                 switch equal hills 2 80
                                 switch equal hills 3 60
                                 0 
-assign   uphillcutoffvalue	    switch equal hills 1 3.0
+assign   uphillcutoffvalue	switch equal hills 1 3.0
                                 switch equal hills 2 1.0
                                 switch equal hills 3 0.5
                                 1.5 
@@ -38,7 +38,7 @@ assign   downhillcostvalue      switch equal hills 1 60
                                 switch equal hills 2 80
                                 switch equal hills 3  0
                                 60  
-assign   mean_cutoff            multiply 0.5 add uphillcutoffvalue downhillcostvalue
+assign   mean_cutoff            multiply 0.5 add uphillcutoffvalue downhillcutoffvalue
 
 assign   elevationpenaltybuffer 7   # 5 as default
 assign   elevationmaxbuffer     13  # 10 as default
@@ -61,7 +61,8 @@ assign   uphillcost   if ( and consider_elevation set_uphill_cost   )  then
 assign   uphillcutoff    add MTB_hillcutfactor if ( and consider_elevation set_uphill_cost )   then    uphillcutoffvalue else 1.5
 assign   downhillcutoff  add MTB_hillcutfactor if ( and consider_elevation set_downhill_cost ) then  downhillcutoffvalue else 1.5 
 
-assign	network_coef		add 1.0 ( multiply -1.0 cycleroutes_pref )  
+assign	network_coef		add 1.0 ( multiply -1.0 cycleroutes_pref )  # 1 - cycleroutes_pref
+assign  no_network_coef		add 1.0 cycleroutes_pref		    # 1 + cycleroutes_pref
 
 assign pass1coefficient 1.8
 assign pass2coefficient 0
@@ -100,7 +101,7 @@ assign isunpaved not or surface= or ispaved or surface=fine_gravel surface=cobbl
 assign probablyGood or ispaved  and isbike not isunpaved  #probably good surface - weather independent
 
 assign istrack  highway=track|road|path|footway
-assign ismainroad highway=motorway|motorway_link|trunk|trunk_link|primary|primary_link|secondary|secondary_link|tertiary|tertiary_link|unclassified
+assign ismainroad highway=motorway|motorway_link|trunk|trunk_link|primary|primary_link|secondary|secondary_link|tertiary|tertiary_link
 
 assign ismuddy and or isunpaved surface=  
                and iswet not surface=gravel|pebblestone   # ***)
@@ -198,7 +199,8 @@ assign MTB_factor_for_road
   if  ( equal MTB_factor 0.0 ) then 0.0 
     else 
     ( if      ( ismainroad ) 								then ( MTB_factor )  
-      else if ( or ispaved highway=residential|living_street|service|pedestrian )	then ( multiply 0.33 MTB_factor )   
+      else if ( or ispaved highway=residential|living_street|service|pedestrian|unclassified )	
+                 then ( multiply 0.33 MTB_factor )   
       else if ( not isunpaved ) 							then ( multiply -0.33 MTB_factor )   
       else  ( multiply -1 multiply MTB_factor ( add 1.0 ( multiply 0.33 roughness_penalty ) ) )
     )
@@ -251,7 +253,6 @@ else 2.0
                                              
 assign rawcostfactor # can be <1, adjusted to >=1 in final step of calculation of costfactor, uphillcostfactor,downhillcostfactor
   
-  add MTB_factor_for_road  # penalizes paved and promotes unpaved roads See *****) for more
   
   add ( max onewaypenalty accesspenalty   )
 
@@ -291,12 +292,24 @@ if istrack then ( 	add 1.0 add trackclass_penalty
  
   cost_of_unknown # above highway tags do not apply
    
-  assign rawcostfactor2  
-	if ( equal cycleroutes_pref 0.0 )  then rawcostfactor						# ignore cycleroutes
-	else if ( not nodeaccessgranted  ) then multiply rawcostfactor add 1.0 cycleroutes_pref		# is not a cycleroute
-        else if is_ldcr	                   then multiply rawcostfactor network_coef			# is a considered cycleroute
-	else				   rawcostfactor						# is a not considered cycleroute  
-			
+  assign rawcostfactor2  										# MTB_factor_for_road + (non)/cycleroute CF adjustment
+	add (
+	if ( equal cycleroutes_pref 0.0 )  then rawcostfactor						# ignore cycleroutes, no distinguishing
+	else if ( not nodeaccessgranted  ) then add (	multiply rawcostfactor no_network_coef )
+						    (	multiply -1.0 ( multiply cycleroutes_pref network_coef ) )
+						# is not a cycleroute
+						# rawcostfactor2 = rawcostfactor * no_network_coef - cycleroutes_pref * network_coef
+						# RCF2 = RCF * ( 1 + crp ) - crp * ( 1- crp )  
+        else if is_ldcr	                   then add (	multiply rawcostfactor network_coef )
+						    (	multiply cycleroutes_pref network_coef ) 
+						# is a considered cycleroute
+						# rawcostfactor2 = rawcostfactor * network_coef + cycleroutes_pref * network_coef
+						# RCF2 = RCF * ( 1 - crp ) + crp * ( 1- crp )  
+	
+	else				   rawcostfactor						# is a cycleroute, but not a considered one
+	)
+	 MTB_factor_for_road  # penalizes paved and promotes unpaved roads See *****) for more
+  	
             
   assign costfactor  # calculations may provide illegal costfactor < 1
     max 1.0 rawcostfactor2
@@ -468,3 +481,4 @@ assign initialcost =
 # Version 2.2.7 ALFA - * Tweaked mainroad + residental costfactors
 # Version 2.2.8 ALFA - * backporting to 2.1 Release
 # Version 2.2.9 ALFA - * Rearranging global context
+# Version 2.2.10 ALFA - + Backported common features from 2.3.4 ALFA ( but track costing system )
