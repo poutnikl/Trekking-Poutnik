@@ -38,11 +38,11 @@ assign   downhillcostvalue      switch equal hills 1 60
                                 switch equal hills 2 80
                                 switch equal hills 3  0
                                 60  
-assign   mean_cutoff            multiply 0.5 add uphillcutoffvalue downhillcutoffvalue
+assign   mean_cutoff            multiply 0.5 
 
 assign   elevationpenaltybuffer 7   # 5 as default
 assign   elevationmaxbuffer     13  # 10 as default
-assign   elevationbufferreduce  multiply 0.5 mean_cutoff
+assign   elevationbufferreduce  multiply 0.333 max uphillcutoffvalue downhillcutoffvalue
 
 assign   validForBikes        1
 
@@ -496,3 +496,4 @@ assign initialcost =
 # Version 2.3.4 ALFA - ! fixed mean cutoff variable
 #                      * Tweaked Cycleroute preferencing to nonlinear progressive penalizing
 #                      * Switched MTB_factor vs cycleroute evaluation order
+# Version 2.3.5 ALFA - ! changed  elevationbufferreduce  = 0.333 * max (uphillcutoffvalue,downhillcutoffvalue)
