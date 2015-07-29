@@ -38,7 +38,6 @@ assign   downhillcostvalue      switch equal hills 1 60
                                 switch equal hills 2 80
                                 switch equal hills 3  0
                                 60  
-assign   mean_cutoff            multiply 0.5 
 
 assign   elevationpenaltybuffer 7   # 5 as default
 assign   elevationmaxbuffer     13  # 10 as default
