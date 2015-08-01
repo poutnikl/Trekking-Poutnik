@@ -496,3 +496,4 @@ assign initialcost =
 #                      * Switched MTB_factor vs cycleroute evaluation order
 # Version 2.3.5 ALFA - * changed  elevationbufferreduce  = 0.333 * max (uphillcutoffvalue,downhillcutoffvalue)
 # Version 2.3.6 ALFA - ! fix  elevationbufferreduce  placement and logic,  = 0.333 * max (uphillcutoff,downhillcutoff)
+# Version 2.3.7 ALFA - -  Removed MTB_hillcutfactor, i.e. MTF factor affects hillcosts only.
