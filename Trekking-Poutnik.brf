@@ -38,11 +38,6 @@ assign   downhillcostvalue      switch equal hills 1 60
                                 switch equal hills 2 80
                                 switch equal hills 3  0
                                 60  
-assign   mean_cutoff            multiply 0.5 add uphillcutoffvalue downhillcutoffvalue
-
-assign   elevationpenaltybuffer 7   # 5 as default
-assign   elevationmaxbuffer     13  # 10 as default
-assign   elevationbufferreduce  multiply 0.5 mean_cutoff
 
 assign   validForBikes        1
 
@@ -50,7 +45,6 @@ assign   MTB_hillcostfactor   multiply -0.3333 ( max -3.0 ( multiply -1.0 ( max 
                   # for MTBfactor <=0 is 0, for MTBfactor >=3 is 1, otherwise 0.3333 * MTBfactor
 			      # progressively decreases hillcosts to be 0.0 at MTB_factor = 3.0
 			      # if MTB_factor = 1 , then downhillcost decreases e.g. from 60 to 40
-assign   MTB_hillcutfactor   multiply MTB_hillcostfactor 1.5
 
 assign   downhillcost if ( and consider_elevation set_downhill_cost )  then 
         ( multiply ( add 1.0 ( multiply MTB_hillcostfactor -1.0 ) ) downhillcostvalue ) else 0
@@ -58,8 +52,12 @@ assign   downhillcost if ( and consider_elevation set_downhill_cost )  then
 assign   uphillcost   if ( and consider_elevation set_uphill_cost   )  then
         ( multiply ( add 1.0 ( multiply MTB_hillcostfactor -1.0 ) ) uphillcostvalue ) else 0
 
-assign   uphillcutoff    add MTB_hillcutfactor if ( and consider_elevation set_uphill_cost )   then    uphillcutoffvalue else 1.5
-assign   downhillcutoff  add MTB_hillcutfactor if ( and consider_elevation set_downhill_cost ) then  downhillcutoffvalue else 1.5 
+assign   uphillcutoff    if ( and consider_elevation set_uphill_cost )   then    uphillcutoffvalue else 1.5
+assign   downhillcutoff  if ( and consider_elevation set_downhill_cost ) then  downhillcutoffvalue else 1.5 
+
+assign   elevationpenaltybuffer 7   # 5 as default
+assign   elevationmaxbuffer     13  # 10 as default
+assign   elevationbufferreduce  multiply 0.333 max uphillcutoff downhillcutoff
 
 assign	network_coef		add 1.0 ( multiply -1.0 cycleroutes_pref )  # 1 - cycleroutes_pref
 assign  no_network_coef		add 1.0 cycleroutes_pref		    # 1 + cycleroutes_pref
@@ -482,3 +480,5 @@ assign initialcost =
 # Version 2.2.8 ALFA - * backporting to 2.1 Release
 # Version 2.2.9 ALFA - * Rearranging global context
 # Version 2.2.10 ALFA - + Backported common features from 2.3.4 ALFA ( but track costing system )
+# Version 2.2.11 ALFA - + Backported common features from 2.3.7 ALFA ( but track costing system )
+#
