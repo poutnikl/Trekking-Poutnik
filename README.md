@@ -1,3 +1,3 @@
 #### Trekking-Poutnik Brouter profile
 
-Template for my custom Trekking bike profiles for  Brouter routing application on Android.
+Track penalting changed to maimal term system system.
