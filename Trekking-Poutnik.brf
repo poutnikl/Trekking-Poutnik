@@ -5,16 +5,17 @@
 ---context:global
 assign   iswet                0 # 0 as default, *)
 assign   consider_elevation   1 # 1 as default
-assign   consider_smoothness  1 # 0 as default
+assign   consider_smoothness  1 # 1 as default
 assign   set_uphill_cost      1 # 1 as default
 assign   set_downhill_cost    1 # 1 as default
 assign   allow_steps          1 # 1 as default
 assign   allow_ferries        1 # 1 as default
+assign   allow_traffic_penalty  1 # 1 as default
 
 assign   cycleroutes_pref     0.2 # **) costfactor penalty for not being cycleroute
 assign   routelevel           2 # *****)  default =2, 1-icn only, 2 +ncn, 3 +rcn, 4 all
 
-assign   MTB_factor           0.0 # default 0.0, recommended -0.5 - +1.0, reasonable -2.0 .. +3.0, "+" promotes bad roads, penalizes mainroads, "-" the oposite  ****)
+assign   MTB_factor           0.0 # default 0.0, see ****), see also https://github.com/poutnikl/Brouter-profiles/wiki/Trekking-MTB-Profiles---legend
 assign   hills                1 # 1 as default, 0=trekking profile default, 1=avoid steep >3.0 hills, 2= avoid all slopes, 3= simulates ascend/length time equivalent
 
 assign   use_proposed_cn      1 # 0 as default, considers proposed cycle networks as unmarked but valid cycleroutes.
@@ -254,11 +255,43 @@ else if surface=grass 			then if highway=path then 2.5 else 1.5
 else if surface=ground|earth|unpaved|sand|dirt|mud
 					then if highway=path then 3.5 else 2.0
 else 2.0
+
+assign trafficpenalty =
+  if ( and ( or cycleway= cycleway=no|none ) and ( or cycleway:left= cycleway:left=no ) ( or cycleway:right= cycleway:right=no ) ) then
+  (
+    if highway=primary|primary_link then
+    (
+      if      estimated_traffic_class=4 then 0.2
+      else if estimated_traffic_class=5 then 0.4
+      else if estimated_traffic_class=6|7 then 0.6 
+      else 0
+    )
+    else if highway=secondary|secondary_link then
+    (
+      if      estimated_traffic_class=3 then 0.2
+      else if estimated_traffic_class=4 then 0.4
+      else if estimated_traffic_class=5 then 0.6
+      else if estimated_traffic_class=6|7 then 1
+      else 0
+    )
+    else if highway=tertiary|tertiary_link then
+    (
+      if      estimated_traffic_class=2 then 0.1
+      else if estimated_traffic_class=3 then 0.3
+      else if estimated_traffic_class=4 then 0.5
+      else if estimated_traffic_class=5|6|7 then 1
+      else 0
+    )
+    else 0
+  )
+  else 0
+  
+
                                              
 assign rawcostfactor # can be <1, adjusted to >=1 in final step of calculation of costfactor, uphillcostfactor,downhillcostfactor
   
   
-  add ( max onewaypenalty accesspenalty   )
+  add ( max onewaypenalty max accesspenalty  switch allow_traffic_penalty trafficpenalty 0 )  
 
   switch and highway= not route=ferry  100000
   switch    highway=steps  switch allow_steps   40 100000
@@ -497,3 +530,4 @@ assign initialcost =
 # Version 2.3.5 ALFA - * changed  elevationbufferreduce  = 0.333 * max (uphillcutoffvalue,downhillcutoffvalue)
 # Version 2.3.6 ALFA - ! fix  elevationbufferreduce  placement and logic,  = 0.333 * max (uphillcutoff,downhillcutoff)
 # Version 2.3.7 ALFA - -  Removed MTB_hillcutfactor, i.e. MTF factor affects hillcosts only.
+# Version 2.4.1 ALFA - +  added traffic penalty from fastbike low traffic profile
