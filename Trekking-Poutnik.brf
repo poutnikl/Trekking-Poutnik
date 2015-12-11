@@ -46,6 +46,9 @@ assign   validForBikes        1
 assign positive_smallpaved_factor 
 	and   ( equal ( max smallpaved_factor 0.0 ) smallpaved_factor ) 
 		 not ( equal smallpaved_factor 0.0 )
+		 
+assign abs_smallpaved_factor  multiply ( switch positive_smallpaved_factor 1.0 -1.0 ) smallpaved_factor 
+		 
 
 assign   MTB_hillcostfactor   multiply -0.3333 ( max -3.0 ( multiply -1.0 ( max 0.0 MTB_factor ) ) )
                   # for MTBfactor <=0 is 0, for MTBfactor >=3 is 1, otherwise 0.3333 * MTBfactor
@@ -213,44 +216,27 @@ assign MTB_factor_for_road
 assign smallpaved_factor_for_road
 
   if  ( equal smallpaved_factor 0.0 ) then 0.0 
-    else if positive_smallpaved_factor  then 
-	multiply smallpaved_factor 
+  
+  else 
+    multiply abs_smallpaved_factor
 	(
-	     if ( highway=motorway|motorway_link|trunk|trunk_link ) then 1.0
-    else if ( highway=primary|primary_link )                    then 0.7
-    else if ( highway=secondary|secondary_link )                then 0.4
-    else if ( highway=tertiary|tertiary_link )                  then 0.2
-    else if ( highway=unclassified )                            then 0.0
-    else if ( highway=residential|living_street|service   )     then 0.0
-	else if not istrack                                         then 0.0
+	     if ( highway=motorway|motorway_link|trunk|trunk_link ) then switch positive_smallpaved_factor 1.0 0.0
+    else if ( highway=primary|primary_link )                    then switch positive_smallpaved_factor 0.7 0.3
+    else if ( highway=secondary|secondary_link )                then switch positive_smallpaved_factor 0.4 0.6
+    else if ( highway=tertiary|tertiary_link )                  then switch positive_smallpaved_factor 0.2 0.8
+    else if ( highway=unclassified )                            then switch positive_smallpaved_factor 0.0 1.0
+    else if ( highway=residential|living_street|service   )     then switch positive_smallpaved_factor 0.0 1.0
+	else if not istrack                                         then switch positive_smallpaved_factor 0.0 1.0
 	else if highway=track|road then ( 
-	          if and tracktype=grade1 ispaved		            then 0.0
-	          else if or tracktype=grade1 ispaved               then 0.2
-	          else if and tracktype=grade2 not isunpaved        then 0.5
-			    												else 1.0
+	          if and tracktype=grade1 ispaved		            then switch positive_smallpaved_factor 0.0 1.0
+	          else if or tracktype=grade1 ispaved               then switch positive_smallpaved_factor 0.2 0.8
+	          else if and tracktype=grade2 not isunpaved        then switch positive_smallpaved_factor 0.5 0.5
+			    												else switch positive_smallpaved_factor 1.0 0.0
 	     )
-	                                                            else 1.0
+	                                                            else switch positive_smallpaved_factor 1.0 0.0
 	
 	)
-	else # is negative
-	multiply ( multiply smallpaved_factor -1.0 )
-	(
-	     if ( highway=motorway|motorway_link|trunk|trunk_link ) then 0.0
-    else if ( highway=primary|primary_link )                    then 0.3
-    else if ( highway=secondary|secondary_link )                then 0.6
-    else if ( highway=tertiary|tertiary_link )                  then 0.8
-    else if ( highway=unclassified )                            then 1.0
-    else if ( highway=residential|living_street|service   )     then 1.0
-	else if not istrack                                         then 1.0
-	else if highway=track|road then ( 
-	          if and tracktype=grade1 ispaved		            then 1.0
-	          else if or tracktype=grade1 ispaved               then 0.8
-	          else if and tracktype=grade2 not isunpaved        then 0.5 
-			                                                    else 0.0                                             
-	     )
-	                                                            else 0.0
-		)
-	
+
 
         	
 
@@ -263,22 +249,22 @@ else if highway=footway		then ( if and footway=sidewalk not isbike then 4.0 else
 else 0.0
 
 assign tracktype_penalty 
-if not istrack			then 0.0	else if tracktype=       then 0.2
+if not istrack              then 0.0	else if tracktype=       then 0.2
 else if tracktype=grade1 	then 0.0	else if tracktype=grade2 then 0.3
 else if tracktype=grade3	then 0.6	else if tracktype=grade4 then 1.0
 else if tracktype=grade5	then 1.5	else 0.1
  
 assign surface_penalty 
-if not istrack							then 0.0
+if not istrack                                  then 0.0
 else if surface=asphalt|paved					then 0.0
-else if surface=concrete|paving_stones				then 0.1
+else if surface=concrete|paving_stones			then 0.1
 else if surface=cobblestone|sett	 			then 0.2
-else if surface=compacted|fine_gravel	 			then 0.2
-else if surface=						then 0.1
-else if surface=ground|earth|unpaved|dirt			then 0.3
-else if surface=grass|sand					then 1.0
+else if surface=compacted|fine_gravel	 		then 0.2
+else if surface=						        then 0.1
+else if surface=ground|earth|unpaved|dirt		then 0.3
+else if surface=grass|sand					    then 1.0
 else if surface=gravel|pebblestone				then 1.2
-else 0.3
+                                                else 0.3
                                            
 assign not_isbike_track_penalty
 if not istrack then 0.0  # this is track context / isbike for mainroads is addressed elsewhere.// 2.2.1 ALFA
