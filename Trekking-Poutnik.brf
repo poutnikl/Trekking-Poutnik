@@ -12,7 +12,7 @@ assign   allow_steps          1 # 1 as default
 assign   allow_ferries        1 # 1 as default
 assign   allow_traffic_penalty  1 # 1 as default
 
-assign   cycleroutes_pref     0.2 # **) costfactor penalty for not being cycleroute
+assign   cycleroutes_pref     0.0 # **) costfactor penalty for not being cycleroute
 assign   routelevel           2 # *****)  default =2, 1-icn only, 2 +ncn, 3 +rcn, 4 all
 
 assign   MTB_factor           0.0 # default 0.0, see ****), see also https://github.com/poutnikl/Brouter-profiles/wiki/Trekking-MTB-Profiles---legend
@@ -21,6 +21,8 @@ assign   smallpaved_factor    0.0 # default 0.0, if <> 0.0 then it penalizes/pro
 
 assign   use_proposed_cn      1 # 0 as default, considers proposed cycle networks as unmarked but valid cycleroutes.
 assign   avoid_unsafe         0 # 0 as default, gives penalty to road without bike friendly status.
+
+assign   path_preference      0.0 # 0 as default, penalizes nonpath ways a/o paved ways
 
 # Internal parameters
 
@@ -324,12 +326,30 @@ assign trafficpenalty =
   )
   else 0
   
+assign nonpath_penalty =
+if ( equal path_preference 0.0 ) then 0.0                  # nonpath_penalty inactive
+else if not istrack then path_preference                   #istrack = highway=track/path/road/footway
+else if ispaved then                                      ( multiply path_preference 0.5 )
+else if or ( and not isunpaved not highway=path ) 
+           ( tracktype=grade1|grade2 )  then              ( multiply path_preference 0.25 )
+else if not ( and isunpaved 
+              and highway=path 
+              and tracktype=grade1|grade2  
+			       not surface=gravel|cobblestone|pebblestone )  
+				                        then              ( multiply path_preference 0.125 )
+
+
+else 0.0
+ 
+  
 
                                              
 assign rawcostfactor # can be <1, adjusted to >=1 in final step of calculation of costfactor, uphillcostfactor,downhillcostfactor
   
   
   add ( max onewaypenalty max accesspenalty  switch allow_traffic_penalty trafficpenalty 0 )  
+  
+  add nonpath_penalty
 
   switch and highway= not route=ferry  100000
   switch    highway=steps  switch allow_steps   40 100000
@@ -576,4 +596,5 @@ assign initialcost =
 # Version 2.4.1 ALFA - +  added traffic penalty from fastbike low traffic profile
 # Version 2.4.2 ALFA - +  added smallpaved_factor
 # Version 2.4.3 ALFA - !  smallpaved_factor rearranging and fixing error for negative values
-# Version 2.4.3 ALFA - !  added experimental up/downhillcostfactor shifts
+# Version 2.4.4 ALFA - !  added experimental up/downhillcostfactor shifts
+# Version 2.4.5 ALFA - !  added experimental small path only prioritization
