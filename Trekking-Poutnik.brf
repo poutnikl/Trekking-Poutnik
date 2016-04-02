@@ -22,7 +22,7 @@ assign   smallpaved_factor    0.0 # default 0.0, if <> 0.0 then it penalizes/pro
 assign   use_proposed_cn      1 # 0 as default, considers proposed cycle networks as unmarked but valid cycleroutes.
 assign   avoid_unsafe         0 # 0 as default, gives penalty to road without bike friendly status.
 
-assign   path_preference      0.0 # 0 as default, penalizes nonpath ways a/o paved ways
+assign   path_preference      0.0 # 0.0 as default, try 20.0 to penalize nonpath ways a/o paved ways
 
 # Internal parameters
 
