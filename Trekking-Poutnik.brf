@@ -624,3 +624,4 @@ assign initialcost =
 # Version 2.4.4 ALFA - +  added experimental up/downhillcostfactor shifts
 # Version 2.4.5 ALFA - +  added experimental small path only prioritization
 # Version 2.4.6 ALFA - +  added priorityclassifier
+# Version 2.4.7 ALFA - *  changed priorityclassifier value for footway and path
