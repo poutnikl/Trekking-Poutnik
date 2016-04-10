@@ -12,7 +12,7 @@ assign   allow_steps          1 # 1 as default
 assign   allow_ferries        1 # 1 as default
 assign   allow_traffic_penalty  1 # 1 as default
 
-assign   cycleroutes_pref     0.0 # **) costfactor penalty for not being cycleroute
+assign   cycleroutes_pref     0.2 # **) costfactor penalty for not being cycleroute
 assign   routelevel           2 # *****)  default =2, 1-icn only, 2 +ncn, 3 +rcn, 4 all
 
 assign   MTB_factor           0.0 # default 0.0, see ****), see also https://github.com/poutnikl/Brouter-profiles/wiki/Trekking-MTB-Profiles---legend
