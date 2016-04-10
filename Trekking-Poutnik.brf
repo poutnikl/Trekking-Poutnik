@@ -24,6 +24,8 @@ assign   avoid_unsafe         0 # 0 as default, gives penalty to road without bi
 
 assign   path_preference      0.0 # 0.0 as default, try 20.0 to penalize nonpath ways a/o paved ways
 
+assign   turnInstructionMode  = 2       # 0=none, 1=gpsies-style, 2=locus-style
+
 # Internal parameters
 
 assign   uphillcostvalue	switch equal hills 1 70
@@ -618,10 +620,13 @@ assign initialcost =
 # Version 2.3.5 ALFA - * changed  elevationbufferreduce  = 0.333 * max (uphillcutoffvalue,downhillcutoffvalue)
 # Version 2.3.6 ALFA - ! fix  elevationbufferreduce  placement and logic,  = 0.333 * max (uphillcutoff,downhillcutoff)
 # Version 2.3.7 ALFA - -  Removed MTB_hillcutfactor, i.e. MTF factor affects hillcosts only.
-# Version 2.4.1 ALFA - +  added traffic penalty from fastbike low traffic profile
-# Version 2.4.2 ALFA - +  added smallpaved_factor
-# Version 2.4.3 ALFA - *!  smallpaved_factor rearranging and fixing error for negative values
-# Version 2.4.4 ALFA - +  added experimental up/downhillcostfactor shifts
-# Version 2.4.5 ALFA - +  added experimental small path only prioritization
+# Version 2.4.1 ALFA - +  traffic penalty from fastbike low traffic profile
+# Version 2.4.2 ALFA - +  smallpaved_factor
+# Version 2.4.3 ALFA - *! smallpaved_factor rearranging and fixing error for negative values
+# Version 2.4.4 ALFA - +  experimental up/downhillcostfactor shifts
+# Version 2.4.5 ALFA - +  experimental small path only prioritization
 # Version 2.4.6 ALFA - +  added priorityclassifier
-# Version 2.4.7 ALFA - *  changed priorityclassifier value for footway and path
+# Version 2.4.7 ALFA - *  tweaked priorityclassifier value for footway and path
+# Version 2.4.8 ALFA - +  assign   turnInstructionMode  = 2  # 0=none, 1=gpsies-style, 2=locus-style
+
+Added  turnInstructionMode
