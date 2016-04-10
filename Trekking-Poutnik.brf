@@ -163,9 +163,11 @@ assign priorityclassifier =
   else if ( highway=service                   ) then  40
   else if ( highway=cycleway                  ) then  30
   else if ( highway=bridleway                 ) then  20
-  else if ( highway=track|road|path|footway   ) then  20
+  else if ( highway=track|road                ) then  20
+  else if ( highway=footway                   ) then  10
   else if ( highway=steps                     ) then  10
   else if ( highway=pedestrian                ) then  10
+  else if ( highway=path                      ) then  5
   else 0
   
 
