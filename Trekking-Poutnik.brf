@@ -628,5 +628,3 @@ assign initialcost =
 # Version 2.4.6 ALFA - +  added priorityclassifier
 # Version 2.4.7 ALFA - *  tweaked priorityclassifier value for footway and path
 # Version 2.4.8 ALFA - +  assign   turnInstructionMode  = 2  # 0=none, 1=gpsies-style, 2=locus-style
-
-Added  turnInstructionMode
