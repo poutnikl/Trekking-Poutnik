@@ -17,9 +17,14 @@ assign   routelevel           2 # *****)  default =2, 1-icn only, 2 +ncn, 3 +rcn
 
 assign   MTB_factor           0.0 # default 0.0, see ****), see also https://github.com/poutnikl/Brouter-profiles/wiki/Trekking-MTB-Profiles---legend
 assign   hills                1 # 1 as default, 0=trekking profile default, 1=avoid steep >3.0 hills, 2= avoid all slopes, 3= simulates ascend/length time equivalent
+assign   smallpaved_factor    0.0 # default 0.0, if <> 0.0 then it penalizes/promotes mainroads and unpaved roads for positive/negative values.
 
 assign   use_proposed_cn      1 # 0 as default, considers proposed cycle networks as unmarked but valid cycleroutes.
 assign   avoid_unsafe         0 # 0 as default, gives penalty to road without bike friendly status.
+
+assign   path_preference      0.0 # 0.0 as default, try 20.0 to penalize nonpath ways a/o paved ways
+
+assign   turnInstructionMode  = 2       # 0=none, 1=gpsies-style, 2=locus-style
 
 # Internal parameters
 
@@ -42,11 +47,18 @@ assign   downhillcostvalue      switch equal hills 1 60
 
 assign   validForBikes        1
 
+assign positive_smallpaved_factor 
+	and   ( equal ( max smallpaved_factor 0.0 ) smallpaved_factor ) 
+		 not ( equal smallpaved_factor 0.0 )
+		 
+assign abs_smallpaved_factor  multiply ( switch positive_smallpaved_factor 1.0 -1.0 ) smallpaved_factor 
+		 
+
 assign   MTB_hillcostfactor   multiply -0.3333 ( max -3.0 ( multiply -1.0 ( max 0.0 MTB_factor ) ) )
                   # for MTBfactor <=0 is 0, for MTBfactor >=3 is 1, otherwise 0.3333 * MTBfactor
 			      # progressively decreases hillcosts to be 0.0 at MTB_factor = 3.0
 			      # if MTB_factor = 1 , then downhillcost decreases e.g. from 60 to 40
-
+				  
 assign   downhillcost if ( and consider_elevation set_downhill_cost )  then 
         ( multiply ( add 1.0 ( multiply MTB_hillcostfactor -1.0 ) ) downhillcostvalue ) else 0
 
@@ -59,6 +71,9 @@ assign   downhillcutoff  if ( and consider_elevation set_downhill_cost ) then  d
 assign   elevationpenaltybuffer 7   # 5 as default
 assign   elevationmaxbuffer     13  # 10 as default
 assign   elevationbufferreduce  multiply 0.333 max uphillcutoff downhillcutoff
+
+assign   uphillCFshift     0.0 # experimental shifting of up/downhillcostfactors as alternative way of 
+assign   downhillCFshift   0.0 # prioritizing/penalizing of up/downhills, based on length, not elevation
 
 assign	network_coef		add 1.0 ( multiply -1.0 cycleroutes_pref )  # 1 - cycleroutes_pref
 assign  no_network_coef		add 1.0 cycleroutes_pref		    # 1 + cycleroutes_pref
@@ -133,6 +148,31 @@ else if ( highway=tertiary|tertiary_link|unclassified )     then 50
 else if ( highway=residential|living_street|service   )     then 30
 else 0
 
+assign priorityclassifier =
+
+       if ( highway=motorway                  ) then  101
+  else if ( highway=motorway_link             ) then  100
+  else if ( highway=trunk                     ) then  91
+  else if ( highway=trunk_link                ) then  90
+  else if ( highway=primary                   ) then  88
+  else if ( highway=primary_link              ) then  87
+  else if ( highway=secondary                 ) then  86
+  else if ( highway=secondary_link            ) then  85
+  else if ( highway=tertiary                  ) then  84
+  else if ( highway=tertiary_link             ) then  83
+  else if ( highway=unclassified              ) then  82
+  else if ( highway=residential|living_street ) then  50
+  else if ( highway=service                   ) then  40
+  else if ( highway=cycleway                  ) then  30
+  else if ( highway=bridleway                 ) then  20
+  else if ( highway=track|road                ) then  20
+  else if ( highway=footway                   ) then  10
+  else if ( highway=steps                     ) then  10
+  else if ( highway=pedestrian                ) then  10
+  else if ( highway=path                      ) then  5
+  else 0
+  
+
 assign defaultaccess
     if access= then ( not motorroad=yes )
     else if access=private|no then 0 else 1
@@ -203,7 +243,34 @@ assign MTB_factor_for_road
       else if ( not isunpaved ) 							then ( multiply -0.33 MTB_factor )   
       else  ( multiply -1 multiply MTB_factor ( add 1.0 ( multiply 0.33 roughness_penalty ) ) )
     )
-        
+
+
+assign smallpaved_factor_for_road
+
+  if  ( equal smallpaved_factor 0.0 ) then 0.0 
+  
+  else 
+    multiply abs_smallpaved_factor
+	(
+	     if ( highway=motorway|motorway_link|trunk|trunk_link ) then switch positive_smallpaved_factor 1.0 0.0
+    else if ( highway=primary|primary_link )                    then switch positive_smallpaved_factor 0.7 0.3
+    else if ( highway=secondary|secondary_link )                then switch positive_smallpaved_factor 0.4 0.6
+    else if ( highway=tertiary|tertiary_link )                  then switch positive_smallpaved_factor 0.2 0.8
+    else if ( highway=unclassified )                            then switch positive_smallpaved_factor 0.0 1.0
+    else if ( highway=residential|living_street|service   )     then switch positive_smallpaved_factor 0.0 1.0
+	else if not istrack                                         then switch positive_smallpaved_factor 0.0 1.0
+	else if highway=track|road then ( 
+	          if and tracktype=grade1 ispaved		            then switch positive_smallpaved_factor 0.0 1.0
+	          else if or tracktype=grade1 ispaved               then switch positive_smallpaved_factor 0.2 0.8
+	          else if and tracktype=grade2 not isunpaved        then switch positive_smallpaved_factor 0.5 0.5
+			    												else switch positive_smallpaved_factor 1.0 0.0
+	     )
+	                                                            else switch positive_smallpaved_factor 1.0 0.0
+	
+	)
+
+
+        	
 
 assign trackclass_penalty 
 if not istrack			then 0.0
@@ -214,22 +281,22 @@ else if highway=footway		then ( if and footway=sidewalk not isbike then 4.0 else
 else 0.0
 
 assign tracktype_penalty 
-if not istrack			then 0.0	else if tracktype=       then 0.2
+if not istrack              then 0.0	else if tracktype=       then 0.2
 else if tracktype=grade1 	then 0.0	else if tracktype=grade2 then 0.3
 else if tracktype=grade3	then 0.6	else if tracktype=grade4 then 1.0
 else if tracktype=grade5	then 1.5	else 0.1
  
 assign surface_penalty 
-if not istrack							then 0.0
+if not istrack                                  then 0.0
 else if surface=asphalt|paved					then 0.0
-else if surface=concrete|paving_stones				then 0.1
+else if surface=concrete|paving_stones			then 0.1
 else if surface=cobblestone|sett	 			then 0.2
-else if surface=compacted|fine_gravel	 			then 0.2
-else if surface=						then 0.1
-else if surface=ground|earth|unpaved|dirt			then 0.3
-else if surface=grass|sand					then 1.0
+else if surface=compacted|fine_gravel	 		then 0.2
+else if surface=						        then 0.1
+else if surface=ground|earth|unpaved|dirt		then 0.3
+else if surface=grass|sand					    then 1.0
 else if surface=gravel|pebblestone				then 1.2
-else 0.3
+                                                else 0.3
                                            
 assign not_isbike_track_penalty
 if not istrack then 0.0  # this is track context / isbike for mainroads is addressed elsewhere.// 2.2.1 ALFA
@@ -286,12 +353,30 @@ assign trafficpenalty =
   )
   else 0
   
+assign nonpath_penalty =
+if ( equal path_preference 0.0 ) then 0.0                  # nonpath_penalty inactive
+else if not istrack then path_preference                   #istrack = highway=track/path/road/footway
+else if ispaved then                                      ( multiply path_preference 0.5 )
+else if or ( and not isunpaved not highway=path ) 
+           ( tracktype=grade1|grade2 )  then              ( multiply path_preference 0.25 )
+else if not ( and isunpaved 
+              and highway=path 
+              and tracktype=grade1|grade2  
+			       not surface=gravel|cobblestone|pebblestone )  
+				                        then              ( multiply path_preference 0.125 )
+
+
+else 0.0
+ 
+  
 
                                              
 assign rawcostfactor # can be <1, adjusted to >=1 in final step of calculation of costfactor, uphillcostfactor,downhillcostfactor
   
   
   add ( max onewaypenalty max accesspenalty  switch allow_traffic_penalty trafficpenalty 0 )  
+  
+  add nonpath_penalty
 
   switch and highway= not route=ferry  100000
   switch    highway=steps  switch allow_steps   40 100000
@@ -346,7 +431,8 @@ if istrack then ( 	add 1.0
 	
 	else				   rawcostfactor						# is a cycleroute, but not a considered one
 	)
-	 MTB_factor_for_road  # penalizes paved and promotes unpaved roads See *****) for more
+	 add  MTB_factor_for_road                    # penalizes paved and promotes unpaved roads See *****) for more
+	      smallpaved_factor_for_road              # penalizes mainroads and unpaved roads, promotes the middle
   	
             
   assign costfactor  # calculations may provide illegal costfactor < 1
@@ -355,7 +441,9 @@ if istrack then ( 	add 1.0
 
     
   assign uphillcostfactor = 
-	max 1.0  add rawcostfactor2 
+	max 1.0  
+	add uphillCFshift
+	add rawcostfactor2 
 	if   ismainroad                         then 0.1 
 	else if highway=residential|living_street then -0.1 
 	else if ispaved				then -0.1
@@ -366,7 +454,9 @@ if istrack then ( 	add 1.0
                               
 
   assign downhillcostfactor =
-	max 1.0  add rawcostfactor2
+	max 1.0
+	add downhillCFshift
+	add rawcostfactor2
 	if   ismainroad                         then -0.1
 	else if  highway=residential|living_street then 0.0
 	else if  ispaved			then -0.1
@@ -530,4 +620,11 @@ assign initialcost =
 # Version 2.3.5 ALFA - * changed  elevationbufferreduce  = 0.333 * max (uphillcutoffvalue,downhillcutoffvalue)
 # Version 2.3.6 ALFA - ! fix  elevationbufferreduce  placement and logic,  = 0.333 * max (uphillcutoff,downhillcutoff)
 # Version 2.3.7 ALFA - -  Removed MTB_hillcutfactor, i.e. MTF factor affects hillcosts only.
-# Version 2.4.1 ALFA - +  added traffic penalty from fastbike low traffic profile
+# Version 2.4.1 ALFA - +  traffic penalty from fastbike low traffic profile
+# Version 2.4.2 ALFA - +  smallpaved_factor
+# Version 2.4.3 ALFA - *! smallpaved_factor rearranging and fixing error for negative values
+# Version 2.4.4 ALFA - +  experimental up/downhillcostfactor shifts
+# Version 2.4.5 ALFA - +  experimental small path only prioritization
+# Version 2.4.6 ALFA - +  added priorityclassifier
+# Version 2.4.7 ALFA - *  tweaked priorityclassifier value for footway and path
+# Version 2.4.8 ALFA - +  assign   turnInstructionMode  = 2  # 0=none, 1=gpsies-style, 2=locus-style
