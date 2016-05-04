@@ -1,9 +1,11 @@
 # Trekking-Poutnik profile, template for Trekking profile variants
+# Version 2.4.10 BETA - *  merged with recent trekking.brf changes
+# See the profile bottom for changelogs
 # For *)-like comments and history log, see the profile bottom.
-# See the profile bottom for version changelogs
 
 ---context:global
-assign   iswet                  0 # 0 as default, *)
+assign   iswet                  0 # 0 as default, *) flag for weather conditions
+
 assign   consider_elevation     1 # 1 as default
 assign   consider_smoothness    1 # 1 as default
 assign   set_uphill_cost        1 # 1 as default
@@ -28,11 +30,11 @@ assign   turnInstructionMode  = 1  # 0=none, 1=auto-choose, 2=locus-style, 3=osm
 
 # Internal parameters
 
-assign   uphillcostvalue    switch equal hills 1 70
+assign   uphillcostvalue        switch equal hills 1 70
                                 switch equal hills 2 80
                                 switch equal hills 3 60
                                 0 
-assign   uphillcutoffvalue    switch equal hills 1 3.0
+assign   uphillcutoffvalue      switch equal hills 1 3.0
                                 switch equal hills 2 1.0
                                 switch equal hills 3 0.5
                                 1.5 
@@ -75,11 +77,11 @@ assign   elevationbufferreduce  multiply 0.333 max uphillcutoff downhillcutoff
 assign   uphillCFshift     0.0 # experimental shifting of up/downhillcostfactors as alternative way of 
 assign   downhillCFshift   0.0 # prioritizing/penalizing of up/downhills, based on length, not elevation
 
-assign    network_coef        add 1.0 ( multiply -1.0 cycleroutes_pref )  # 1 - cycleroutes_pref
-assign  no_network_coef        add 1.0 cycleroutes_pref            # 1 + cycleroutes_pref
+assign    network_coef           add 1.0 ( multiply -1.0 cycleroutes_pref )  # 1 - cycleroutes_pref
+assign    no_network_coef        add 1.0 cycleroutes_pref                    # 1 + cycleroutes_pref
 
-assign pass1coefficient 1.8
-assign pass2coefficient 0
+assign    pass1coefficient 1.8
+assign    pass2coefficient 0
 
 assign   unsafe_penalty       1.0 # 1 - was 2 in Trekking, but this may cause U-like safe routes
 assign   cost_of_unknown      2.0 # 2 as default, cost of highway=
@@ -125,19 +127,19 @@ assign turncost       if  ismainroad  then 90    else if ispaved then 60   else 
                       
 assign initialclassifier
 if route=ferry then 1
-else if ( highway=motorway|motorway_link )            then 2
-else if ( highway=trunk|trunk_link )                then 3
-else if ( highway=primary|primary_link )                    then 4
-else if ( highway=secondary|secondary_link )                then 5
-else if ( highway=tertiary|tertiary_link )             then 6
+else if ( highway=motorway|motorway_link )       then 2
+else if ( highway=trunk|trunk_link )             then 3
+else if ( highway=primary|primary_link )         then 4
+else if ( highway=secondary|secondary_link )     then 5
+else if ( highway=tertiary|tertiary_link )       then 6
 else if ( highway=unclassified )                 then 7
 else if ( highway=residential   )                then 8
-else if ( highway=living_street  )                then 9
-else if ( highway=service   )                     then 10
-else if ( highway=footway   )                     then 11
-else if ( istrack )                            then 12
-else if    ( highway=cycleway )                    then 13
-else 14
+else if ( highway=living_street  )               then 9
+else if ( highway=service   )                    then 10
+else if ( highway=footway   )                    then 11
+else if ( istrack )                              then 12
+else if    ( highway=cycleway )                  then 13
+                                                 else 14
 
 assign initialcost
 if route=ferry then 10000
@@ -146,70 +148,65 @@ else if ( highway=primary|primary_link )                    then 120
 else if ( highway=secondary|secondary_link )                then 80
 else if ( highway=tertiary|tertiary_link|unclassified )     then 50
 else if ( highway=residential|living_street|service   )     then 30
-else 0
-
-# odd priorities indicate link-types
-
-assign priorityclassifier =
-
-  if      ( highway=motorway                  ) then  30
-  else if ( highway=motorway_link             ) then  29
-  else if ( highway=trunk                     ) then  28
-  else if ( highway=trunk_link                ) then  27
-  else if ( highway=primary                   ) then  26
-  else if ( highway=primary_link              ) then  25
-  else if ( highway=secondary                 ) then  24
-  else if ( highway=secondary_link            ) then  23
-  else if ( highway=tertiary                  ) then  22
-  else if ( highway=tertiary_link             ) then  21
-  else if ( highway=unclassified              ) then  20
-  else if ( highway=residential|living_street ) then  16
-  else if ( highway=service                   ) then  14
-  else if ( tracktype=grade1                  ) then  6
-  else if ( highway=cycleway                  ) then  6
-  else if ( bicycle=designated                ) then  6
-  else if ( highway=bridleway                 ) then  4
-  else if ( highway=track|road|footway        ) then  4
-  else if ( highway=steps|path|pedestrian     ) then  2
-  else 0
+                                                            else 0
   
+assign defaultaccess =
+       if access= then not motorroad=yes
+       else if access=private|no then false
+       else true    
+ 
+   
+assign bikeaccess =
+       if nodeaccessgranted then true
+       else if bicycle= then
+       (
+         if vehicle= then defaultaccess
+         else not vehicle=private|no
+       )
+       else not bicycle=private|no|dismount  
 
-assign defaultaccess
-    if access= then ( not motorroad=yes )
-    else if access=private|no then 0 else 1
+assign footaccess =
+       if bikeaccess then true
+       else if bicycle=dismount then true
+       else if foot= then defaultaccess
+       else not foot=private|no
 
-assign bikeaccess
-  or nodeaccessgranted
-     if ( bicycle= ) then  ( if vehicle= then defaultaccess
-                                         else ( if vehicle=private|no then false else true )
-                            )
-                     else ( not bicycle=private|no|dismount )
+assign accesspenalty =
+       if bikeaccess then 0
+       else if footaccess then 4
+       else 100000
 
-assign footaccess  or bikeaccess
-       or bicycle=dismount
-       switch foot=    defaultaccess      
-                       not or foot=private foot=no
 
-assign accesspenalty    switch bikeaccess   0
-                        switch footaccess   4
-                        100000
+#
+# handle one-ways. On primary roads, wrong-oneways should
+# be close to forbidden, while on other ways we just add
+# 4 to the costfactor (making it at least 5 - you are allowed
+# to push your bike)
+#
+assign badoneway =
+       if reversedirection=yes then
+         if oneway= then junction=roundabout else oneway=yes|true|1
+       else oneway=-1
+       
 
-assign oneway     switch oneway=      junction=roundabout      oneway=yes|true|1
+assign onewaypenalty =
+       if ( badoneway ) then
+       (
+         if ( cycleway=opposite|opposite_lane|opposite_track ) then 0
+         else if ( oneway:bicycle=no                         ) then 0
+         else if ( highway=primary|primary_link              ) then 50
+         else if ( highway=secondary|secondary_link          ) then 30
+         else if ( highway=tertiary|tertiary_link            ) then 20
+         else 4.0
+       )
+       else 0.0
 
-assign onewaypenalty
-       if ( if reversedirection=yes then oneway else oneway=-1  ) then
-            ( if ( or cycleway=opposite|opposite_lane|opposite_track oneway:bicycle=no ) then 0
-              else if ( highway=primary|primary_link ) then 50
-              else if ( highway=secondary|secondary_link ) then 30
-              else if ( highway=tertiary|tertiary_link ) then 20 else 4.0
-              )
-       else   0.0
 
 
 assign smoothness_penalty  
 # http://wiki.openstreetmap.org/wiki/Key:smoothness
 
-if not consider_smoothness                  then 0.0 else
+if not consider_smoothness                                then 0.0 else
 if smoothness=                                            then 0.0 else
 if smoothness=excellent|very_good|good                    then 0.0 else
 if smoothness=intermediate                                then 0.1 else
@@ -313,19 +310,20 @@ else if tracktype=grade5           then 3.0
                                    else 3.0 
 
 assign wet_penalty
-if   not iswet               then 0.0 
-else if not istrack          then 0.0
-else if ispaved              then 0.0
-else if surface=compacted    then 0.6
-else if surface=fine_gravel  then 0.8
-else if surface=cobblestone  then 0.5
-else if surface=             then if highway=path then 2.0 else 1.0
-else if surface=grass        then if highway=path then 2.5 else 1.5
+if   not iswet                      then 0.0 
+else if not istrack                 then 0.0
+else if ispaved                     then 0.0
+else if surface=compacted           then 0.6
+else if surface=fine_gravel         then 0.8
+else if surface=cobblestone         then 0.5
+else if surface=                    then if highway=path then 2.0 else 1.0
+else if surface=grass               then if highway=path then 2.5 else 1.5
 else if surface=ground|earth|unpaved|sand|dirt|mud
-                             then if highway=path then 3.5 else 2.0
-                             else 2.0
+                                    then if highway=path then 3.5 else 2.0
+                                    else 2.0
 
 assign trafficpenalty =
+  if not allow_traffic_penalty then 0 else    
   if ( and ( or cycleway= cycleway=no|none ) and ( or cycleway:left= cycleway:left=no ) ( or cycleway:right= cycleway:right=no ) ) then
   (
     if highway=primary|primary_link then
@@ -356,19 +354,18 @@ assign trafficpenalty =
   else 0
   
 assign nonpath_penalty =
-if ( equal path_preference 0.0 ) then 0.0                  # nonpath_penalty inactive
-else if not istrack then path_preference                   #istrack = highway=track/path/road/footway
-else if ispaved then                                      ( multiply path_preference 0.5 )
-else if or ( and not isunpaved not highway=path ) 
-           ( tracktype=grade1|grade2 )  then              ( multiply path_preference 0.25 )
-else if not ( and isunpaved 
-              and highway=path 
-              and tracktype=grade1|grade2  
-                   not surface=gravel|cobblestone|pebblestone )  
-                                        then              ( multiply path_preference 0.125 )
-
-
-else 0.0
+    if      ( equal path_preference 0.0 )   then 0.0                # nonpath_penalty inactive
+    else if not istrack                     then path_preference    #istrack = highway=track/path/road/footway
+    else if ispaved                         then ( multiply path_preference 0.5 )
+    else if or  ( and not isunpaved 
+                      not highway=path )
+                ( tracktype=grade1|grade2 ) then ( multiply path_preference 0.25 )
+    else if not ( and isunpaved
+                  and highway=path
+                  and tracktype=grade1|grade2
+                  not surface=gravel|cobblestone|pebblestone )  
+                                            then                    ( multiply path_preference 0.125 )
+                                            else                    0.0
   
 
                                              
@@ -432,7 +429,7 @@ if istrack then (     add 1.0
     
     else                   rawcostfactor                        # is a cycleroute, but not a considered one
     )
-     add  MTB_factor_for_road                    # penalizes paved and promotes unpaved roads See *****) for more
+     add  MTB_factor_for_road                     # penalizes paved and promotes unpaved roads See *****) for more
           smallpaved_factor_for_road              # penalizes mainroads and unpaved roads, promotes the middle
       
             
@@ -445,34 +442,73 @@ if istrack then (     add 1.0
     max 1.0  
     add uphillCFshift
     add rawcostfactor2 
-    if   ismainroad                         then 0.1 
-    else if highway=residential|living_street then -0.1 
-    else if ispaved                then -0.1
-        else if surface=gravel|pebblestone      then 0.2
-        else if ismuddy                         then 0.2   
-        else if isunpaved                       then 0.1   
-        else                                         0.0
+    if   ismainroad                                 then 0.1 
+    else if highway=residential|living_street       then -0.1 
+    else if ispaved                                 then -0.1
+    else if surface=gravel|pebblestone              then 0.2
+    else if ismuddy                                 then 0.2   
+    else if isunpaved                               then 0.1   
+                                                    else 0.0
                               
 
   assign downhillcostfactor =
     max 1.0
     add downhillCFshift
     add rawcostfactor2
-    if   ismainroad                         then -0.1
-    else if  highway=residential|living_street then 0.0
-    else if  ispaved            then -0.1
-    else if surface=gravel|pebblestone    then 0.5
-    else if surface=fine_gravel|sand    then 0.4
-        else if ismuddy                         then 0.5  
-        else if tracktype=grade5                then 0.4
-    else if tracktype=grade4                then 0.3
-    else if highway=path|footway        then 0.2
-        else if tracktype=grade3                then 0.2
-        else if surface=cobblestone   then if iswet then 0.3 else 0.1
-        else if tracktype=grade2                then 0.1
-        else if isunpaved                   then 0.2
-    else                                    0.0
-                              
+    if   ismainroad                                 then -0.1
+    else if  highway=residential|living_street      then 0.0
+    else if  ispaved                                then -0.1
+    else if surface=gravel|pebblestone              then 0.5
+    else if surface=fine_gravel|sand                then 0.4
+    else if ismuddy                                 then 0.5  
+    else if tracktype=grade5                        then 0.4
+    else if tracktype=grade4                        then 0.3
+    else if highway=path|footway                    then 0.2
+    else if tracktype=grade3                        then 0.2
+    else if surface=cobblestone                     then if iswet then 0.3 else 0.1
+    else if tracktype=grade2                        then 0.1
+    else if isunpaved                               then 0.2
+                                                    else 0.0
+
+assign onewaydirection = 
+      if equal onewaypenalty 0 then 0
+      else
+        if reversedirection=yes then
+          if oneway=-1 then 1 else -1
+        else
+          if oneway=-1 then -1 else 1                                                    
+                                                    
+assign roundaboutdirection =
+ if junction=roundabout then
+  if reversedirection=yes then -1 else 1
+ else 0
+
+                                                    
+# odd priorities indicate link-types
+
+assign priorityclassifier =
+
+  if      ( highway=motorway                  ) then  30
+  else if ( highway=motorway_link             ) then  29
+  else if ( highway=trunk                     ) then  28
+  else if ( highway=trunk_link                ) then  27
+  else if ( highway=primary                   ) then  26
+  else if ( highway=primary_link              ) then  25
+  else if ( highway=secondary                 ) then  24
+  else if ( highway=secondary_link            ) then  23
+  else if ( highway=tertiary                  ) then  22
+  else if ( highway=tertiary_link             ) then  21
+  else if ( highway=unclassified              ) then  20
+  else if ( highway=residential|living_street ) then  16
+  else if ( highway=service                   ) then  14
+  else if ( tracktype=grade1                  ) then  6
+  else if ( highway=cycleway                  ) then  6
+  else if ( bicycle=designated                ) then  6
+  else if ( highway=bridleway                 ) then  4
+  else if ( highway=track|road|footway        ) then  4
+  else if ( highway=steps|path|pedestrian     ) then  2
+  else 0
+                                                      
 
 ---context:node  # following code refers to node tags
 
@@ -630,3 +666,4 @@ assign initialcost =
 # Version 2.4.7 ALFA - *  tweaked priorityclassifier value for footway and path
 # Version 2.4.8 ALFA - +  assign   turnInstructionMode  = 2  # 0=none, 1=gpsies-style, 2=locus-style
 # Version 2.4.9 BETA - *  updated  turnInstructionMode, code cleanup, release preparation
+# Version 2.4.10 BETA - *  merged with recent trekking.brf changes
