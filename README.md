@@ -6,8 +6,8 @@ While saving, do not forget the .brf extension.
 |Profile name          |What to change                  |Comment                                              |
 |----------------------|--------------------------------|-----------------------------------------------------|
 |Trekking-Dry          |Nothing                         |Template default content is identical to this profile|
-|Trekking-Dry          |assign iswet 1                  |To be used in wet/potentially muddy conditions       |
-|                      |                                |It can be combined with MTB_factor                   |
+|Trekking-Wet          |assign iswet 1                  |To be used in wet/potentially muddy conditions       |
+|                      |                                |It can be combined with MTB_factor as wet variants   |
 |Trekking-MTB-light    |assign MTB_factor 0.2           |                                                     |
 |Trekking-MTB-medium   |assign MTB_factor 0.5           |                                                     |
 |Trekking-MTB-strong   |assign MTB_factor 1.0           |                                                     |
