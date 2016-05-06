@@ -1,6 +1,6 @@
 #### Trekking-Poutnik Brouter profile template for bikes
 
-This is a development version. You can easily derive up-to-date versions of my [bicycle profiles](https://github.com/poutnikl/Brouter-profiles/wiki/Bicycle-Trekking-profiles) based on the latest [Template file](https://raw.githubusercontent.com/poutnikl/Trekking-Poutnik/master/Trekking-Poutnik.brf). 
+This is a development version. You can easily derive up-to-date versions of my [bicycle profiles](https://github.com/poutnikl/Brouter-profiles/wiki/Bicycle-Trekking-profiles) from this latest [Template file](https://raw.githubusercontent.com/poutnikl/Trekking-Poutnik/master/Trekking-Poutnik.brf). 
 While saving, do not forget the .brf extension.
 
 |Profile name          |What to change                  |Comment                                              |
