@@ -1,5 +1,5 @@
 # Trekking-Poutnik profile, template for Trekking profile variants
-# Version 2.4.11 BETA - *  merged with release trekking.brf changes
+# Version 2.4.11 RELEASE - implemented navigation instructions and recent trekking.brf changes
 # See the profile bottom for changelogs
 # For *)-like comments and history log, see the profile bottom.
 
@@ -675,4 +675,4 @@ assign initialcost =
 # Version 2.4.8 ALFA - +  assign   turnInstructionMode  = 2  # 0=none, 1=gpsies-style, 2=locus-style
 # Version 2.4.9 BETA - *  updated  turnInstructionMode, code cleanup, release preparation
 # Version 2.4.10 BETA - *  merged with recent trekking.brf changes
-# Version 2.4.11 BETA - *  merged with release trekking.brf changes
+# Version 2.4.11 RELEASE - *  merged with release trekking.brf changes
