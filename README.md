@@ -16,5 +16,8 @@ While saving, do not forget the .brf extension.
 |                      |assign smallpaved_factor -0.3   |                                                     |
 |MTB                   |assign MTB_factor 2.0           |                                                     |
 |                      |assign smallpaved_factor -0.5   |                                                     |
+|Trekking-Valley       |assign hills 4                  | Strongly penalizes ascends/descends. Prefers large  |
+|                      |                                | percentage of flat-like route along the valleys     |
+
 
 1) - [See Locus forum post](http://forum.locusmap.eu/index.php?topic=4883.msg41428#msg41428)
