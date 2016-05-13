@@ -12,7 +12,7 @@ While saving, do not forget the .brf extension.
 |Trekking-MTB-medium   |assign MTB_factor 0.5           |                                                     |
 |Trekking-MTB-strong   |assign MTB_factor 1.0           |                                                     |
 |Trekking-Fast         |assign MTB_factor -0.5          | "Anti-MTB"                                          |
-|MTB-light             |assign MTB_factor 1.0           |  1)                                                 |
+|MTB-light             |assign MTB_factor 1.0           | [See Locus forum post](http://forum.locusmap.eu/index.php?topic=4883.msg41428#msg41428)                                                 |
 |                      |assign smallpaved_factor -0.3   |                                                     |
 |MTB                   |assign MTB_factor 2.0           |                                                     |
 |                      |assign smallpaved_factor -0.5   |                                                     |
