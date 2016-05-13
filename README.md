@@ -8,7 +8,7 @@ While saving, do not forget the .brf extension.
 |Trekking-Dry          |Nothing                         |Template default content is identical to this profile|
 |Trekking-Wet          |assign iswet 1                  |To be used in wet/potentially muddy conditions       |
 |                      |                                |It can be combined with MTB_factor as wet variants   |
-|Trekking-MTB-light    |assign MTB_factor 0.2           |                                                     |
+|Trekking-MTB-light    |assign MTB_factor 0.2           |See [Trekking-MTB-Profiles legend](https://github.com/poutnikl/Brouter-profiles/wiki/Trekking-MTB-Profiles---legend)                                                     |
 |Trekking-MTB-medium   |assign MTB_factor 0.5           |                                                     |
 |Trekking-MTB-strong   |assign MTB_factor 1.0           |                                                     |
 |Trekking-Fast         |assign MTB_factor -0.5          | "Anti-MTB"                                          |
