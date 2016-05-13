@@ -20,6 +20,4 @@ While saving, do not forget the .brf extension.
 |                      |                                | percentage of flat-like route along the valleys     |
 
 
-1) - [See Locus forum post](http://forum.locusmap.eu/index.php?topic=4883.msg41428#msg41428)
-
 [Visit also my Brouter profiles wiki pages](https://github.com/poutnikl/Brouter-profiles/wiki)
