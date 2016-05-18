@@ -18,6 +18,8 @@ While saving, do not forget the .brf extension.
 |                      |assign smallpaved_factor -0.5   |                                                     |
 |Trekking-Valley       |assign hills 4                  | Strongly penalizes ascends/descends. Prefers large  |
 |                      |                                | percentage of flat-like route along the valleys     |
+|SmallRoads            |assign MTB_factor -1.7          | Prefers way classes approx since terciary roads     |
+|                      |assign smallpaved_factor 2.0    | to  paved tracks                                    |
 
 
 [Visit also my Brouter profiles wiki pages](https://github.com/poutnikl/Brouter-profiles/wiki)
