@@ -1,5 +1,5 @@
 # Trekking-Poutnik profile, template for Trekking profile variants
-# Version 2.4.12 BETA - implemented valley mode ( assign hills 4 )
+# Version 2.4.13 BETA - Fixed default hills value back to 1
 # See the profile bottom for changelogs
 # For *)-like comments and history log, see the profile bottom.
 
@@ -20,7 +20,7 @@ assign   cycleroutes_pref       0.2 # **) costfactor penalty for not being cycle
 assign   routelevel             2 # *****)  default =2, 1-icn only, 2 +ncn, 3 +rcn, 4 all
 
 assign   MTB_factor             0.0 # default 0.0, see ****), see also https://github.com/poutnikl/Brouter-profiles/wiki/Trekking-MTB-Profiles---legend
-assign   hills                  4 # 1=default,                         0=trekking profile default,                1=try to avoid steep hills >3.0%, 
+assign   hills                  1 # 1=default,                         0=trekking profile default,                1=try to avoid steep hills >3.0%, 
                                   # 2=velomobile-like avoiding slopes, 3= simulates ascend/length time equiv.     4=valley mode
 
 assign   valley_nonflat_multiplier = 2.0
