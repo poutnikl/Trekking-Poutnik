@@ -8,6 +8,11 @@ While saving, do not forget the .brf extension.
 |Trekking-Dry          |Nothing                         |Template default content is identical to this profile|
 |Trekking-Wet          |assign iswet 1                  |To be used in wet/potentially muddy conditions       |
 |                      |                                |It can be combined with MTB_factor as wet variants   |
+|Trekking-ICR          |assign cycleroutes_pref 0.0     |No preference for cycleroutes. Values >0.0 up to 1.0 |
+|                      |                                |progressively prefer long distance icn,ncn           |
+|                      |                                |and similarly penalize  non cycleroutes              |
+|                      |assign routelevel 1..4          |Defined what is considered long distance route yet   |
+|                      |                                |1-icn only, 2 +ncn(default), 3 +rcn, 4 all           |
 |Trekking-MTB-light    |assign MTB_factor 0.2           |See [Trekking-MTB-Profiles legend](https://github.com/poutnikl/Brouter-profiles/wiki/Trekking-MTB-Profiles---legend)                                                     |
 |Trekking-MTB-medium   |assign MTB_factor 0.5           |                                                     |
 |Trekking-MTB-strong   |assign MTB_factor 1.0           |                                                     |
