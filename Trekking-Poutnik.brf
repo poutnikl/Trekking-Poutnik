@@ -1,5 +1,5 @@
 # Trekking-Poutnik profile, template for Trekking profile variants
-# Version 2.4.13 BETA - Fixed default hills value back to 1
+# Version 2.4.14 ALFA -  Switching MTB Factor granularity to smallpaved factor one - with keeping its effect, of course
 # See the profile bottom for changelogs
 # For *)-like comments and history log, see the profile bottom.
 
@@ -20,6 +20,9 @@ assign   cycleroutes_pref       0.2 # **) costfactor penalty for not being cycle
 assign   routelevel             2 # *****)  default =2, 1-icn only, 2 +ncn, 3 +rcn, 4 all
 
 assign   MTB_factor             0.0 # default 0.0, see ****), see also https://github.com/poutnikl/Brouter-profiles/wiki/Trekking-MTB-Profiles---legend
+assign   New_MTB_factor         0 # default 0 = old mainrod/paved/not unpaved/unpaved granularity
+                                  #         1 = new granularity based on smallpaved factor one
+
 assign   hills                  1 # 1=default,                         0=trekking profile default,                1=try to avoid steep hills >3.0%, 
                                   # 2=velomobile-like avoiding slopes, 3= simulates ascend/length time equiv.     4=valley mode
 
@@ -59,9 +62,7 @@ assign   downhillcostvalue      switch equal hills 1 60
 
 assign   validForBikes        1
 
-assign positive_smallpaved_factor 
-    and   ( equal ( max smallpaved_factor 0.0 ) smallpaved_factor ) 
-         not ( equal smallpaved_factor 0.0 )
+assign positive_smallpaved_factor  or ( equal smallpaved_factor 0.0 ) ( greater smallpaved_factor 0.0 )
          
 assign abs_smallpaved_factor  multiply ( switch positive_smallpaved_factor 1.0 -1.0 ) smallpaved_factor 
          
@@ -253,6 +254,31 @@ assign MTB_factor_for_road
       else if ( not isunpaved )                             then ( multiply -0.33 MTB_factor )   
       else  ( multiply -1 multiply MTB_factor ( add 1.0 ( multiply 0.33 roughness_penalty ) ) )
     )
+    
+assign univ_factor_coef = (
+
+         if ( highway=motorway|motorway_link|trunk|trunk_link ) then 1.0
+    else if ( highway=primary|primary_link )                    then 0.7
+    else if ( highway=secondary|secondary_link )                then 0.4
+    else if ( highway=tertiary|tertiary_link )                  then 0.2
+    else if ( highway=unclassified )                            then 0.0
+    else if ( highway=residential|living_street|service   )     then 0.0
+    else if not istrack                                         then 0.0
+    else if highway=track|road then ( 
+              if and tracktype=grade1 ispaved                   then 0.0
+              else if or tracktype=grade1 ispaved               then -0.2
+              else if and tracktype=grade2 not isunpaved        then multiply -0.5 ( add 1.0 ( multiply 0.33 roughness_penalty ) )
+                                                                else multiply -1.0 ( add 1.0 ( multiply 0.33 roughness_penalty ) )
+         )
+                                                                else multiply -1.0 ( add 1.0 ( multiply 0.33 roughness_penalty ) )
+
+
+)
+
+
+assign MTB_factor_for_road_new
+  if  ( equal MTB_factor 0.0 ) then 0.0  else    multiply MTB_factor  univ_factor_coef
+    
 
 
 assign smallpaved_factor_for_road
@@ -440,8 +466,10 @@ if istrack then (     add 1.0
     
     else                   rawcostfactor                        # is a cycleroute, but not a considered one
     )
-     add  MTB_factor_for_road                     # penalizes paved and promotes unpaved roads See *****) for more
-          smallpaved_factor_for_road              # penalizes mainroads and unpaved roads, promotes the middle
+    
+    add  if New_MTB_factor then MTB_factor_for_road
+                            else MTB_factor_for_road_new # penalizes paved and promotes unpaved roads See *****) for more
+          smallpaved_factor_for_road                     # penalizes mainroads and unpaved roads, promotes the middle
       
             
   assign costfactor  # calculations may provide illegal costfactor < 1
@@ -690,3 +718,4 @@ assign initialcost =
 # Version 2.4.10 BETA - *  merged with recent trekking.brf changes
 # Version 2.4.11 RELEASE - *  merged with release trekking.brf changes
 # Version 2.4.12 BETA - + implemented valley mode ( assign hills 4 )
+# Version 2.4.13 BETA - Fixed default hills value back to 1
