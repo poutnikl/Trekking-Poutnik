@@ -1,5 +1,5 @@
 # Trekking-Poutnik profile, template for Trekking profile variants
-# Version 2.4.14 ALFA -  Switching MTB Factor granularity to smallpaved factor one - with keeping its effect, of course
+# Version 2.4.14 ALFA -  Switching MTB Factor granularity to smallpaved factor one - with keeping its effect, of course. Small Smoothness tweak
 # See the profile bottom for changelogs
 # For *)-like comments and history log, see the profile bottom.
 
@@ -221,8 +221,8 @@ assign smoothness_penalty
 if not consider_smoothness                                then 0.0 else
 if smoothness=                                            then 0.0 else
 if smoothness=excellent|very_good|good                    then 0.0 else
-if smoothness=intermediate                                then 0.1 else
-if smoothness=bad|robust_wheels                           then 0.4 else
+if smoothness=intermediate                                then 0.2 else
+if smoothness=bad|robust_wheels                           then 0.5 else
 if smoothness=very_bad|high_clearance                     then 1.0 else
 if smoothness=horrible|off_road_wheels                    then 2.0 else
 if smoothness=very_horrible                               then 4.0 else
@@ -245,67 +245,47 @@ if mtb:scale=4|5|6   then 9000
 
 assign roughness_penalty max smoothness_penalty mtb_scale_penalty    
 
-assign MTB_factor_for_road
-  if  ( equal MTB_factor 0.0 ) then 0.0 
-    else 
-    ( if      ( ismainroad )                                then ( MTB_factor )  
-      else if ( or ispaved highway=residential|living_street|service|pedestrian|unclassified )    
-                                                            then ( multiply 0.33 MTB_factor )   
-      else if ( not isunpaved )                             then ( multiply -0.33 MTB_factor )   
-      else  ( multiply -1 multiply MTB_factor ( add 1.0 ( multiply 0.33 roughness_penalty ) ) )
-    )
-    
+   
 assign univ_factor_coef = (
-
+    
          if ( highway=motorway|motorway_link|trunk|trunk_link ) then 1.0
-    else if ( highway=primary|primary_link )                    then 0.7
-    else if ( highway=secondary|secondary_link )                then 0.4
-    else if ( highway=tertiary|tertiary_link )                  then 0.2
-    else if ( highway=unclassified )                            then 0.0
-    else if ( highway=residential|living_street|service   )     then 0.0
-    else if not istrack                                         then 0.0
-    else if highway=track|road then ( 
-              if and tracktype=grade1 ispaved                   then 0.0
-              else if or tracktype=grade1 ispaved               then -0.2
-              else if and tracktype=grade2 not isunpaved        then multiply -0.5 ( add 1.0 ( multiply 0.33 roughness_penalty ) )
-                                                                else multiply -1.0 ( add 1.0 ( multiply 0.33 roughness_penalty ) )
-         )
-                                                                else multiply -1.0 ( add 1.0 ( multiply 0.33 roughness_penalty ) )
-
-
+    else if ( highway=primary|primary_link )                    then 0.8
+    else if ( highway=secondary|secondary_link )                then 0.6
+    else if ( highway=tertiary|tertiary_link )                  then 0.4
+    else if ( highway=unclassified )                            then 0.3
+    else if ( highway=residential|living_street|service|pedestrian   )     then switch ispaved 0.2 switch isunpaved -0.2 0.0
+    else if not highway=track|road|path                         then 0.2 # 
+    else if highway=track|road then (                           # not path
+              if surface=concrete                               then -0.2
+              if and tracktype=grade1 ispaved                   then 0.1
+              else if or tracktype=grade1 ispaved               then -0.1
+              else multiply ( add 1.0 ( multiply 0.33 roughness_penalty ) )
+                ( if surface=cobblestone                            then -0.8
+                  else if surface=fine_gravel                       then -0.3
+                  else if surface=                                  then switch tracktype=grade2|grade3 -0.2 -0.5
+                  else if surface=compacted                         then -0.4
+                  else if surface=ground|grass                      then -0.7
+                  else if surface=gravel|pebblestone|mud            then -1.0
+                                                                    else -1.0
+                )                                                  
+         )   
+         # is path
+     else ( multiply ( add 1.0 ( multiply 0.33 roughness_penalty ) )
+                   ( if surface=paving_stones|concrete then -0.3
+                     else if surface=compacted|fine_gravel then -0.6
+                     else -1.0 )
+          )           
+                   
 )
 
-
-assign MTB_factor_for_road_new
-  if  ( equal MTB_factor 0.0 ) then 0.0  else    multiply MTB_factor  univ_factor_coef
+assign MTB_factor_for_road  if  ( equal MTB_factor 0.0 ) then 0.0  
+   else    multiply MTB_factor  univ_factor_coef
     
-
-
-assign smallpaved_factor_for_road
-
-  if  ( equal smallpaved_factor 0.0 ) then 0.0 
-  
-  else 
-    multiply abs_smallpaved_factor
-    (
-         if ( highway=motorway|motorway_link|trunk|trunk_link ) then switch positive_smallpaved_factor 1.0 0.0
-    else if ( highway=primary|primary_link )                    then switch positive_smallpaved_factor 0.7 0.3
-    else if ( highway=secondary|secondary_link )                then switch positive_smallpaved_factor 0.4 0.6
-    else if ( highway=tertiary|tertiary_link )                  then switch positive_smallpaved_factor 0.2 0.8
-    else if ( highway=unclassified )                            then switch positive_smallpaved_factor 0.0 1.0
-    else if ( highway=residential|living_street|service   )     then switch positive_smallpaved_factor 0.0 1.0
-    else if not istrack                                         then switch positive_smallpaved_factor 0.0 1.0
-    else if highway=track|road then ( 
-              if and tracktype=grade1 ispaved                   then switch positive_smallpaved_factor 0.0 1.0
-              else if or tracktype=grade1 ispaved               then switch positive_smallpaved_factor 0.2 0.8
-              else if and tracktype=grade2 not isunpaved        then switch positive_smallpaved_factor 0.5 0.5
-                                                                else switch positive_smallpaved_factor 1.0 0.0
-         )
-                                                                else switch positive_smallpaved_factor 1.0 0.0
-    
-    )
-
-
+assign smallpaved_factor_for_road   if  ( equal smallpaved_factor 0.0 ) then 0.0 
+   else multiply abs_smallpaved_factor 
+                 if positive_smallpaved_factor then  (   multiply ( ( if lesser univ_factor_coef 0.0 then -1.0 else 1.0 ) univ_factor_coef ) )
+                                               then  (   sub 1.0 multiply ( ( if lesser univ_factor_coef 0.0 then -1.0 else 1.0 ) univ_factor_coef ) )
+ 
             
 
 assign trackclass_penalty 
@@ -467,9 +447,8 @@ if istrack then (     add 1.0
     else                   rawcostfactor                        # is a cycleroute, but not a considered one
     )
     
-    add  if New_MTB_factor then MTB_factor_for_road
-                            else MTB_factor_for_road_new # penalizes paved and promotes unpaved roads See *****) for more
-          smallpaved_factor_for_road                     # penalizes mainroads and unpaved roads, promotes the middle
+    add   MTB_factor_for_road           # penalizes paved and promotes unpaved roads See *****) for more
+          smallpaved_factor_for_road    # penalizes mainroads and unpaved roads, promotes the middle
       
             
   assign costfactor  # calculations may provide illegal costfactor < 1
