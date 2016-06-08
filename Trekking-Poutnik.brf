@@ -1,5 +1,5 @@
 # Trekking-Poutnik profile, template for Trekking profile variants
-# Version 2.4.15 ALFA -  * Tweaked universal MTB/smallpaved factor coeficients
+# Version 2.4.16 ALFA -  * Updated trafficpenalty calculation from fastbike-lowtraffic
 # See the profile bottom for changelogs
 # For *)-like comments and history log, see the profile bottom.
 
@@ -344,10 +344,10 @@ else if surface=ground|earth|unpaved|sand|dirt|mud
                                     then if highway=path then 3.5 else 2.0
                                     else 2.0
 
-assign trafficpenalty =
-  if not allow_traffic_penalty then 0 else    
-  if ( and ( or cycleway= cycleway=no|none ) and ( or cycleway:left= cycleway:left=no ) ( or cycleway:right= cycleway:right=no ) ) then
-  (
+assign hascycleway = not
+  and ( or cycleway= cycleway=no|none ) and ( or cycleway:left= cycleway:left=no ) ( or cycleway:right= cycleway:right=no )
+
+assign trafficpenalty0 =
     if highway=primary|primary_link then
     (
       if      estimated_traffic_class=4 then 0.2
@@ -372,8 +372,10 @@ assign trafficpenalty =
       else 0
     )
     else 0
-  )
-  else 0
+
+assign trafficpenalty =
+  if hascycleway then min 0.3 trafficpenalty0
+  else trafficpenalty0
   
 assign nonpath_penalty =
     if      ( equal path_preference 0.0 )   then 0.0                # nonpath_penalty inactive
@@ -699,3 +701,4 @@ assign initialcost =
 # Version 2.4.13 BETA - Fixed default hills value back to 1
 # Version 2.4.14 ALFA -  * Switching MTB Factor granularity to smallpaved factor one - with keeping its effect, of course. Small Smoothness tweak
 #                        * tweaked costfactors for cycleway/residential|living_street/service 
+# Version 2.4.15 ALFA -  * Tweaked universal MTB/smallpaved factor coeficients
