@@ -1,7 +1,21 @@
 #### My universal Brouter profile template for bike profiles
 
-This is a development version. You can easily derive up-to-date versions of my [bicycle profiles](https://github.com/poutnikl/Brouter-profiles/wiki/Bicycle-Trekking-profiles) from this latest [Template file](https://raw.githubusercontent.com/poutnikl/Trekking-Poutnik/master/Trekking-Poutnik.brf). 
-While saving, do not forget the .brf extension.
+* This is a development version of Bicycle profile template, that may be a head of the released [Bicycle profiles](https://github.com/poutnikl/Brouter-profiles/raw/master/BR-Bike-Profiles.zip). 
+* See more at [Brouter-profiles](https://github.com/poutnikl/Brouter-profiles).
+
+
+
+
+
+
+* You can derive respective development versions of the profiles from this latest [Template file](https://raw.githubusercontent.com/poutnikl/Trekking-Poutnik/master/Trekking-Poutnik.brf) by 2 ways. 
+
+    * 1/ Use modification table below ( for now not covering all profiles ). While saving, do not forget the .brf extension.
+    * 2/ Use this [Windows batchfile sedbatch.bat](https://raw.githubusercontent.com/poutnikl/Brouter-profiles/master/sedbatch.bat). 
+        * Check its prerequisities inside the batch code ( presence and provided location of sed.exe, wget.exe and (optionally) 7z.exe utilities.
+        * Run the batch with "bike" parameter as "sedbatch bike" from the Windows command line.
+
+
 
 |Profile name          |What to change                  |Comment                                              |
 |----------------------|--------------------------------|-----------------------------------------------------|
