@@ -3,11 +3,6 @@
 * This is a development version of Bicycle profile template, that may be a head of the released [Bicycle profiles](https://github.com/poutnikl/Brouter-profiles/raw/master/BR-Bike-Profiles.zip). 
 * See more at [Brouter-profiles](https://github.com/poutnikl/Brouter-profiles).
 
-
-
-
-
-
 * You can derive respective development versions of the profiles from this latest [Template file](https://raw.githubusercontent.com/poutnikl/Trekking-Poutnik/master/Trekking-Poutnik.brf) by 2 ways. 
 
     * 1/ Use modification table below ( for now not covering all profiles ). While saving, do not forget the .brf extension.
@@ -41,4 +36,6 @@
 |                      |assign smallpaved_factor 2.0    | to  paved tracks                                    |
 
 
-[Visit also my Brouter profiles wiki pages](https://github.com/poutnikl/Brouter-profiles/wiki)
+* See more at 
+    * [Brouter-profiles](https://github.com/poutnikl/Brouter-profiles) and
+    * [Brouter profiles wiki pages](https://github.com/poutnikl/Brouter-profiles/wiki)
