@@ -26,7 +26,7 @@
 |-SameCR               |assign routelevel 4             |Preference of local/regional routes is as strong as       |
 |                      |                                |for long distance routes ( normally about the half )      |
 |Trekking-MTB-light    |assign MTB_factor 0.2           |See [Trekking-MTB-Profiles-legend](https://github.com/poutnikl/Brouter-profiles/wiki/Trekking-MTB-Profiles---legend)|
-|Trekking-MTB-medium   |assign MTB_factor 0.5           |                                                          |
+|Trekking-MTB-medium   |assign MTB_factor 0.5           |  |
 |Trekking-MTB-strong   |assign MTB_factor 1.0           |                                                          |
 |Trekking-Fast         |assign MTB_factor -0.5          | "Anti-MTB"                                               |
 |MTB-light             |assign MTB_factor 1.0           | [See Locus forum post](http://forum.locusmap.eu/index.php?topic=4883.msg41428#msg41428)                                                      |
