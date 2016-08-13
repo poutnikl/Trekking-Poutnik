@@ -16,7 +16,8 @@
 |----------------------|--------------------------------|----------------------------------------------------------|
 |Trekking-Dry          |Nothing                         |Template default content is identical to this profile     |
 |-Wet                  |assign iswet 1                  |Penalizes way in potentially muddy or slicky conditions   |
-|-FCR-  (FollowCycleRoute)|assign cycleroutes_pref 0.6 ( default 0.2 )|Stronger preference of cycleroutes than the default one. It is similar to Stick_to_cycleroutes of standard Trekking profile, but the router preferences work differently in my profiled. There are 3 levels of progresivity. |
+|-FCR-  (FollowCycleRoute)|assign cycleroutes_pref 0.6 ( default 0.2 )|Stronger preference of cycleroutes than the default one. It is similar to Stick_to_cycleroutes of standard Trekking profile, but the router preferences work differently in my profiled. E.g. routes are not automatically taken as perfect with costfactor 1.0, neither have the zero turncost.|
+||There are 3 levels of progresivity. ||
 ||Level1-cycleroutes_pref|Values >0.0 up to 1.0 prefer long distance cycleroutes and penalize non cycleroutes. Value 1.0 make long distance routes always perfect, non-routes get doubled costfactor. Local routes stay always intact. |
 ||Level2-routelevel| Determines cycleroutes considered as local, by default local and regional ones|
 ||Level3-costfactor|Effect is minimal for optimal ways and becomes stronger for higher costfactor values|
