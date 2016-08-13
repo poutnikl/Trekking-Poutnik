@@ -1,7 +1,10 @@
 # Trekking-Poutnik profile, template for Trekking profile variants
-# Version 2.4.16 ALFA -  * Updated trafficpenalty calculation from fastbike-lowtraffic
-# See the profile bottom for changelogs
-# For *)-like comments and history log, see the profile bottom.
+# Template version 2.4.16  * Updated trafficpenalty calculation from fastbike-lowtraffic
+# See also https://github.com/poutnikl/Brouter-profiles/wiki
+# and https://github.com/poutnikl/Trekking-Poutnik
+# <LEGEND>
+# Legend above is placeholder for generated comments of final profile
+# See the profile bottom for changelogs and verbose *) comments
 
 ---context:global
 assign   iswet                  0 # 0 as default, *) flag for weather conditions
