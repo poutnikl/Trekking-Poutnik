@@ -18,15 +18,11 @@
 |-Wet                  |assign iswet 1                  |To be used in wet weather, penalizes potentially          |
 |                      |                                |penalizing wet/potentially muddy conditions               |
 |-FCR-  (FollowCycleRoute)|assign cycleroutes_pref 0.6 ( default 0.2 )|Stronger preference of cycleroutes than the default one. It is similar to Stick_to_cycleroutes of standard Trekking profile, but the router preferences work differently in my profiled. There are 3 levels of progresivity. |
-|||Level1-nonroute-localroute-longdistance route |
-|||Level2-nonroute-localroute-longdistance route |
-|||Level3-nonroute-localroute-longdistance route |
-|-ICR-                 |assign cycleroutes_pref 0.0     |No preference for cycleroutes. Values >0.0 up to 1.0      |
-|                      |                                |progressively prefer long distance icn,ncn                |
-|                      |                                |and similarly penalize  non cycleroutes                   |
-|                      |                                |Effects are stronger for not optimal ways                 |
-|-SameCR               |assign routelevel 4             |Preference of local/regional routes is as strong as       |
-|                      |                                |for long distance routes ( normally about the half )      |
+||Level1-cycleroutes_pref|Values >0.0 up to 1.0 prefer long distance cycleroutes and penalize non cycleroutes. Value 1.0 make long distance routes always perfect, non-routes get doubled costfactor. Local routes stay always intact. |
+||Level2-routelevel| Determines cycleroutes considered as local, by default local and regional ones|
+||Level3-costfactor|Effect is minimal for optimal ways and becomes stronger for higher costfactor values|
+|-ICR-                 |assign cycleroutes_pref 0.0     |No preference for cycleroutes.    |
+|-SameCR               |assign routelevel 4             |Consider local/regional routes as long distance routes    |
 |Trekking-MTB-light    |assign MTB_factor 0.2           |See [Trekking-MTB-Profiles-legend](https://github.com/poutnikl/Brouter-profiles/wiki/Trekking-MTB-Profiles---legend)|
 |Trekking-MTB-medium   |assign MTB_factor 0.5           |  |
 |Trekking-MTB-strong   |assign MTB_factor 1.0           |                                                          |
