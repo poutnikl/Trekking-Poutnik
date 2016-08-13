@@ -7,7 +7,7 @@
 
     * 1/ Use modification table below ( for now not covering all profiles ). While saving, do not forget the .brf extension.
     * 2/ Use this [Windows batchfile sedbatch.bat](https://raw.githubusercontent.com/poutnikl/Brouter-profiles/master/sedbatch.bat). 
-        * Check its prerequisities inside the batch code ( presence and provided location of sed.exe, wget.exe and (optionally) 7z.exe utilities.
+        * Check its prerequisities inside the batch code ( presence and provided location of sed.exe, wget.exe and (later will be optional) 7z.exe utilities.)
         * Run the batch with "bike" parameter as "sedbatch bike" from the Windows command line.
 
 
