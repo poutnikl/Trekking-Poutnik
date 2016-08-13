@@ -7,7 +7,7 @@
 
     * 1/ Use modification table below ( for now not covering all profiles ). While saving, do not forget the .brf extension.
     * 2/ Use this [Windows batchfile sedbatch.bat](https://raw.githubusercontent.com/poutnikl/Brouter-profiles/master/sedbatch.bat). 
-        * Check its prerequisities inside the batch code ( presence and provided location of sed.exe, wget.exe and (optionally) 7z.exe utilities.
+        * Check its prerequisities inside the batch code ( presence and provided location of sed.exe, wget.exe and (later will be optional) 7z.exe utilities.)
         * Run the batch with "bike" parameter as "sedbatch bike" from the Windows command line.
 
 
@@ -15,18 +15,16 @@
 |Profile name/code     |What to change / was changed    |Comment                                                   |
 |----------------------|--------------------------------|----------------------------------------------------------|
 |Trekking-Dry          |Nothing                         |Template default content is identical to this profile     |
-|-Wet                  |assign iswet 1                  |To be used in wet weather, penalizes potentially          |
-|                      |                                |penalizing wet/potentially muddy conditions               |
-|-FCR-                 |assign cycleroutes_pref 0.6     |Stronger preference of cycleroutes      |   
-|(FollowCycleRoute)    |                                |works differently to standard Trekking.brf                |
-|-ICR-                 |assign cycleroutes_pref 0.0     |No preference for cycleroutes. Values >0.0 up to 1.0      |
-|                      |                                |progressively prefer long distance icn,ncn                |
-|                      |                                |and similarly penalize  non cycleroutes                   |
-|                      |                                |Effects are stronger for not optimal ways                 |
-|-SameCR               |assign routelevel 4             |Preference of local/regional routes is as strong as       |
-|                      |                                |for long distance routes ( normally about the half )      |
+|-Wet                  |assign iswet 1                  |Penalizes way in potentially muddy or slicky conditions   |
+|-FCR-  (FollowCycleRoute)|assign cycleroutes_pref 0.6 ( default 0.2 )|Stronger preference of cycleroutes than the default one. It is similar to Stick_to_cycleroutes of standard Trekking profile, but the router preferences work differently in my profiled. E.g. routes are not automatically taken as perfect with costfactor 1.0, neither have the zero turncost.|
+||There are 3 levels of progresivity. ||
+||Level1-cycleroutes_pref|Values >0.0 up to 1.0 prefer long distance cycleroutes and penalize non cycleroutes. Value 1.0 make long distance routes always perfect, non-routes get doubled costfactor. Local routes stay always intact. |
+||Level2-routelevel| Determines cycleroutes considered as local, by default local and regional ones|
+||Level3-costfactor|Effect is minimal for optimal ways and becomes stronger for higher costfactor values|
+|-ICR-                 |assign cycleroutes_pref 0.0     |No preference for cycleroutes.    |
+|-SameCR               |assign routelevel 4             |Consider local/regional routes as long distance routes    |
 |Trekking-MTB-light    |assign MTB_factor 0.2           |See [Trekking-MTB-Profiles-legend](https://github.com/poutnikl/Brouter-profiles/wiki/Trekking-MTB-Profiles---legend)|
-|Trekking-MTB-medium   |assign MTB_factor 0.5           |                                                          |
+|Trekking-MTB-medium   |assign MTB_factor 0.5           |  |
 |Trekking-MTB-strong   |assign MTB_factor 1.0           |                                                          |
 |Trekking-Fast         |assign MTB_factor -0.5          | "Anti-MTB"                                               |
 |MTB-light             |assign MTB_factor 1.0           | [See Locus forum post](http://forum.locusmap.eu/index.php?topic=4883.msg41428#msg41428)                                                      |
