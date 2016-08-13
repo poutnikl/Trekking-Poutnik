@@ -24,7 +24,8 @@
 |                      |                                |and similarly penalize  non cycleroutes                   |
 |                      |                                |Effects are stronger for not optimal ways                 |
 |-SameCR               |assign routelevel 4             |Preference of local/regional routes is as strong as       |
-|                      |                                |for long distance routes ( normally about the half )      |           |Trekking-MTB-light    |assign MTB_factor 0.2           |See [Trekking-MTB-Profiles legend](https://github.com/poutnikl/Brouter-profiles/wiki/Trekking-MTB-Profiles---legend)                                                          |
+|                      |                                |for long distance routes ( normally about the half )      |
+|Trekking-MTB-light    |assign MTB_factor 0.2           |See [Trekking-MTB-Profiles-legend](https://github.com/poutnikl/Brouter-profiles/wiki/Trekking-MTB-Profiles---legend)|
 |Trekking-MTB-medium   |assign MTB_factor 0.5           |                                                          |
 |Trekking-MTB-strong   |assign MTB_factor 1.0           |                                                          |
 |Trekking-Fast         |assign MTB_factor -0.5          | "Anti-MTB"                                               |
