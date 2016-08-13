@@ -17,8 +17,10 @@
 |Trekking-Dry          |Nothing                         |Template default content is identical to this profile     |
 |-Wet                  |assign iswet 1                  |To be used in wet weather, penalizes potentially          |
 |                      |                                |penalizing wet/potentially muddy conditions               |
-|-FCR-                 |assign cycleroutes_pref 0.6     |Stronger preference of cycleroutes      |   
-|(FollowCycleRoute)    |                                |works differently to standard Trekking.brf                |
+|-FCR-  (FollowCycleRoute)|assign cycleroutes_pref 0.6 ( default 0.2 )|Stronger preference of cycleroutes than the default one. It is similar to Stick_to_cycleroutes of standard Trekking profile, but the router preferences work differently in my profiled. There are 3 levels of progresivity. |
+|||Level1-nonroute-localroute-longdistance route |
+|||Level2-nonroute-localroute-longdistance route |
+|||Level3-nonroute-localroute-longdistance route |
 |-ICR-                 |assign cycleroutes_pref 0.0     |No preference for cycleroutes. Values >0.0 up to 1.0      |
 |                      |                                |progressively prefer long distance icn,ncn                |
 |                      |                                |and similarly penalize  non cycleroutes                   |
