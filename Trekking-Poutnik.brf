@@ -1,5 +1,5 @@
 # Trekking-Poutnik profile, template for Trekking profile variants
-# Template version 2.4.16  * Updated trafficpenalty calculation from fastbike-lowtraffic
+# Template version 2.5.1  * tweaked track costs
 # See also https://github.com/poutnikl/Brouter-profiles/wiki
 # and https://github.com/poutnikl/Trekking-Poutnik
 #
@@ -416,8 +416,13 @@ assign rawcostfactor # can be <1, adjusted to >=1 in final step of calculation o
   switch    highway=residential|living_street         ( switch ismuddy 2.0 switch isunpaved 1.6 1.2 )
   switch    highway=service                           ( switch ismuddy 1.8 switch isunpaved 1.5 1.1 )
 
-if istrack then ( add 1.0  max trackclass_penalty   max tracktype_penalty    max surface_penalty
-                          max not_isbike_track_penalty   max roughness_penalty   wet_penalty     )
+  if istrack then ( add 1.0  max trackclass_penalty
+                             max tracktype_penalty
+                             max surface_penalty
+                             max not_isbike_track_penalty
+                             max roughness_penalty
+                                 wet_penalty   
+                  )
   
  else
    
@@ -707,3 +712,4 @@ assign initialcost =
 # Version 2.4.14 ALFA -  * Switching MTB Factor granularity to smallpaved factor one - with keeping its effect, of course. Small Smoothness tweak
 #                        * tweaked costfactors for cycleway/residential|living_street/service 
 # Version 2.4.15 ALFA -  * Tweaked universal MTB/smallpaved factor coeficients
+# Version 2.4.16 RELEASE * Updated trafficpenalty calculation from fastbike-lowtraffic
