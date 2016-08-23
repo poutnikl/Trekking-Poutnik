@@ -286,10 +286,13 @@ assign univ_factor_coef = (
                    
 )
 
-assign MTB_factor_for_road  if  ( equal MTB_factor 0.0 ) then 0.0  
-   else    multiply MTB_factor  univ_factor_coef
+assign MTB_factor_for_road
+   if  ( equal MTB_factor 0.0 ) then 0.0  
+                                else multiply MTB_factor  univ_factor_coef
    
-assign abs_univ_factor =  if ( greater 0.0 univ_factor_coef ) then ( multiply -1.0 univ_factor_coef ) else univ_factor_coef   
+assign abs_univ_factor =  
+    if ( greater 0.0 univ_factor_coef ) then ( multiply -1.0 univ_factor_coef )
+                                        else univ_factor_coef   
     
 assign smallpaved_factor_for_road   
 
