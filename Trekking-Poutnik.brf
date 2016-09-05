@@ -1,5 +1,5 @@
 # Trekking-Poutnik profile, template for Trekking profile variants
-# Template version 2.5.2  + no code chnage, Notepad++ folding comment blocks inserted
+# Template version 2.5.3  ! fixed iswet calculations for surface= tracks and mainroads with cobblestone|sett surface
 # See also https://github.com/poutnikl/Brouter-profiles/wiki
 # and https://github.com/poutnikl/Trekking-Poutnik
 #
@@ -736,5 +736,8 @@ assign initialcost =
 #                        * tweaked costfactors for cycleway/residential|living_street/service 
 # Version 2.4.15 ALFA -  * Tweaked universal MTB/smallpaved factor coeficients
 # Version 2.4.16 RELEASE * Updated trafficpenalty calculation from fastbike-lowtraffic
-# Template version 2.5.1  * tweaked track costs
-# bend /comments
+# Template version 2.5.1  * tweaked track costs 
+#                         + bend /comments
+# Template version 2.5.2  + no code chnage, Notepad++ folding comment blocks inserted
+# Template version 2.5.3  ! fixed iswet calculations for surface= tracks and mainroads with cobblestone|sett surface
+
