@@ -1,8 +1,7 @@
 #### My universal Brouter profile template for bike profiles
 
-* This is a development version of Bicycle profile template, that may be a head of the released [Bicycle profiles](https://github.com/poutnikl/Brouter-profiles/raw/master/BR-Bike-Profiles.zip). 
+* This is a development version of Bicycle profile template, that is eventually used to generate Bicycle Profiles.
 
-* See more at 
-    * [Brouter-profiles](https://github.com/poutnikl/Brouter-profiles).
-    * [Trekking template wiki page](https://github.com/poutnikl/Trekking-Poutnik/wiki)
+* See more at * [Trekking profile template wiki](https://github.com/poutnikl/Trekking-Poutnik/wiki) and [Brouter profiles-wiki](https://github.com/poutnikl/Brouter-profiles/wiki).
+    
 
