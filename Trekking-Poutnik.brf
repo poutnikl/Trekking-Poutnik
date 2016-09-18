@@ -1,5 +1,5 @@
 # Trekking-Poutnik profile, template for Trekking profile variants
-# Template version 2.5.3  ! fixed iswet calculations for surface= tracks and mainroads with cobblestone|sett surface
+# Template version 2.5.4  ! fixed oneway>bicycle=yes for oneway management
 # See also https://github.com/poutnikl/Brouter-profiles/wiki
 # and https://github.com/poutnikl/Trekking-Poutnik
 #
@@ -205,10 +205,15 @@ assign accesspenalty =
 # 4 to the costfactor (making it at least 5 - you are allowed
 # to push your bike)
 #
+
+
 assign badoneway =
        if reversedirection=yes then
-         if oneway= then junction=roundabout else oneway=yes|true|1
+         if oneway:bicycle=yes then true  # added in v 
+         else if oneway= then junction=roundabout 
+         else oneway=yes|true|1
        else oneway=-1
+       
        
 
 assign onewaypenalty =
