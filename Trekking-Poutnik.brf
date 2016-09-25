@@ -1,5 +1,5 @@
 # Trekking-Poutnik profile, template for Trekking profile variants
-# Template version 2.5.4  ! fixed oneway>bicycle=yes for oneway management
+# Version 2.5.5  ! fixed penalty calculation for bicycle=NO
 # See also https://github.com/poutnikl/Brouter-profiles/wiki
 # and https://github.com/poutnikl/Trekking-Poutnik
 #
@@ -32,6 +32,9 @@ assign   smallpaved_factor      0.0 # default 0.0, if <> 0.0 then it penalizes/p
                                     
 assign   hills                  1 # 1=default,                         0=trekking profile default,                1=try to avoid steep hills >3.0%, 
                                   # 2=velomobile-like avoiding slopes, 3= simulates ascend/length time equiv.     4=valley mode
+
+assign   StrictNOBicycleaccess  0 # 0 allows but penalizes foot only access / 1 forbides foot only access.
+
 
 assign   valley_nonflat_multiplier = 2.0
                                   
@@ -195,8 +198,9 @@ assign footaccess =
 
 assign accesspenalty =
        if bikeaccess then 0
-       else if footaccess then 4
-       else 100000
+       else if footaccess then 
+        ( if StrictNOBicycleaccess then 10000 else 4 )
+       else 10000
 
 
 #
@@ -417,8 +421,8 @@ assign nonpath_penalty = (
                                              
 assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation of costfactor, uphillcostfactor,downhillcostfactor
   
-  
-  add ( max onewaypenalty max accesspenalty  switch allow_traffic_penalty trafficpenalty 0 )  
+  # v2.5.5>  add ( max onewaypenalty max accesspenalty  switch allow_traffic_penalty trafficpenalty 0 ) 
+  # was moved  to final (up/down/costfactor calculation to avoid being affected by costfactor tweaks
   
   add nonpath_penalty
 
@@ -483,15 +487,25 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
     
     add   MTB_factor_for_road           # penalizes paved and promotes unpaved roads See *****) for more
           smallpaved_factor_for_road    # penalizes mainroads and unpaved roads, promotes the middle
+    
+                                      
+          
     )  
             
   assign costfactor  # calculations may provide illegal costfactor < 1
-    max 1.0 rawcostfactor2
+    add
+           max 1.0 rawcostfactor2 
+           ( max onewaypenalty max accesspenalty  switch allow_traffic_penalty trafficpenalty 0 ) 
+           # v2.5.5  was moved from rawcostfactor to avoid being affected by MTB_factor and smallpaved_factor
+          
  
   
     
   assign uphillcostfactor = (
-    max 1.0  
+    add ( max onewaypenalty max accesspenalty  switch allow_traffic_penalty trafficpenalty 0 ) 
+           # v2.5.5  was moved from rawcostfactor to avoid being affected by MTB_factor and smallpaved_factor
+    max 1.0
+              
     if ( equal hills 4 ) then ( multiply rawcostfactor2 valley_nonflat_multiplier )
     else
     add uphillCFshift
@@ -506,7 +520,11 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
     )                          
 
   assign downhillcostfactor =  (
+    add ( max onewaypenalty max accesspenalty  switch allow_traffic_penalty trafficpenalty 0 ) 
+           # v2.5.5  was moved from rawcostfactor to avoid being affected by MTB_factor and smallpaved_factor
+    
     max 1.0
+       
     if ( equal hills 4 ) then ( multiply rawcostfactor2 valley_nonflat_multiplier )
     else
     add downhillCFshift
@@ -741,8 +759,8 @@ assign initialcost =
 #                        * tweaked costfactors for cycleway/residential|living_street/service 
 # Version 2.4.15 ALFA -  * Tweaked universal MTB/smallpaved factor coeficients
 # Version 2.4.16 RELEASE * Updated trafficpenalty calculation from fastbike-lowtraffic
-# Template version 2.5.1  * tweaked track costs 
-#                         + bend /comments
-# Template version 2.5.2  + no code chnage, Notepad++ folding comment blocks inserted
-# Template version 2.5.3  ! fixed iswet calculations for surface= tracks and mainroads with cobblestone|sett surface
-
+# Version 2.5.1  * tweaked track costs 
+# Version 2.5.2  + no code chnage, Notepad++ folding comment blocks inserted
+# Version 2.5.3  ! fixed iswet calculations for surface= tracks and mainroads with cobblestone|sett surface
+# Version 2.5.4  ! fixed oneway>bicycle=yes for oneway management
+# + bend /comments
