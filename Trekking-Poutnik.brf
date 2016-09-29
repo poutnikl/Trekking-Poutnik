@@ -1,5 +1,5 @@
 # Trekking-Poutnik profile, template for Trekking profile variants
-# Version 2.5.5  ! fixed penalty calculation for bicycle=NO
+# Version 2.5.6 BETA !unified MTB_factor and smallpaved_factor wrt elevation and roughness_penalty
 # See also https://github.com/poutnikl/Brouter-profiles/wiki
 # and https://github.com/poutnikl/Trekking-Poutnik
 #
@@ -71,24 +71,31 @@ assign   downhillcostvalue      switch equal hills 1 60
 
 assign   validForBikes        1
 
+assign   MTBminusSP_factor   sub MTB_factor smallpaved_factor
+
 assign positive_smallpaved_factor  or ( equal smallpaved_factor 0.0 ) ( greater smallpaved_factor 0.0 )
          
 assign abs_smallpaved_factor  multiply ( switch positive_smallpaved_factor 1.0 -1.0 ) smallpaved_factor 
          
 
-assign   MTB_hillcostfactor   multiply -0.3333 ( max -3.0 ( multiply -1.0 ( max 0.0 MTB_factor ) ) )
-                  # for MTBfactor <=0 is 0, for MTBfactor >=3 is 1, otherwise 0.3333 * MTBfactor
-                  # progressively decreases hillcosts to be 0.0 at MTB_factor = 3.0
+assign   MTB_hillcostfactor   multiply 0.3333 ( min 3.0  ( max -3.0 MTBminusSP_factor ) )
+                  # for MTBminusSP_factor <=3 is -1, if  >=3 is 1, otherwise 0.3333 * MTBminusSP_factor
+                  # It changes hillcosts to be 0.0 at MTBminusSP_factor = 3.0 and twice at -3.0
                   # if MTB_factor = 1 , then downhillcost decreases e.g. from 60 to 40
+                  # if MTB_factor = -1 , then downhillcost increases e.g. from 60 to 80
+                  
                   
 assign   downhillcost if ( and consider_elevation set_downhill_cost )  then 
-        ( multiply ( add 1.0 ( multiply MTB_hillcostfactor -1.0 ) ) downhillcostvalue ) else 0
+        ( multiply ( sub 1.0 MTB_hillcostfactor  ) downhillcostvalue ) else 0
 
 assign   uphillcost   if ( and consider_elevation set_uphill_cost   )  then
-        ( multiply ( add 1.0 ( multiply MTB_hillcostfactor -1.0 ) ) uphillcostvalue ) else 0
+        ( multiply ( sub 1.0 MTB_hillcostfactor  ) uphillcostvalue ) else 0
 
-assign   uphillcutoff    if ( and consider_elevation set_uphill_cost )   then    uphillcutoffvalue else 1.5
-assign   downhillcutoff  if ( and consider_elevation set_downhill_cost ) then  downhillcutoffvalue else 1.5 
+assign   uphillcutoff    if ( and consider_elevation set_uphill_cost )   then   
+        (  multiply ( max 0.0 min 1.0 add 1.0 MTB_hillcostfactor  ) uphillcutoffvalue )   else 1.5
+        
+assign   downhillcutoff  if ( and consider_elevation set_downhill_cost ) then  
+        (  multiply ( max 0.0 min 1.0 add 1.0 MTB_hillcostfactor  ) downhillcutoffvalue ) else 1.5 
 
 assign   elevationpenaltybuffer if ( equal hills 4 ) then 10 else 5   # 5 is trekking default
 assign   elevationmaxbuffer     if ( equal hills 4 ) then 20 else 10  # 10 is trekking default
@@ -763,4 +770,5 @@ assign initialcost =
 # Version 2.5.2  + no code chnage, Notepad++ folding comment blocks inserted
 # Version 2.5.3  ! fixed iswet calculations for surface= tracks and mainroads with cobblestone|sett surface
 # Version 2.5.4  ! fixed oneway>bicycle=yes for oneway management
+# Version 2.5.5  ! fixed penalty calculation for bicycle=NO
 # + bend /comments
