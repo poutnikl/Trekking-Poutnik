@@ -439,6 +439,9 @@ assign nonpath_penalty = (
                                             else                    0.0
   
     )
+
+  
+   
    
 # bstart /costfactors
 assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation of costfactor, uphillcostfactor,downhillcostfactor
@@ -448,15 +451,26 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
   
   
   switch and highway= not route=ferry  10000 #only highways unless ferry
-  switch highway=motorway|motorway_link|proposed|abandoned|construction  10000
+  switch highway=motorway|motorway_link|proposed|abandoned  10000
   
   # all other exclusions below (access, steps, ferries,..)
   # should not be deleted by the decoder, to be available
   # in voice-hint-processing
+  
+# There are effectively 3 classes of forbidden ways now.
+# Class 1 with CF 10000,  totally ignored by decoder and routing as was
+#                         initially before voice hints came.
+# Class 2 with CF 9999,              as above, but noticed by voice hint generator.
+# Class 3 with CF >> 1 but < 9999,   not ignored, but due extremely high cost
+#                                    used effectively as a last resort only.
+  
+  
+  
   min 9999 
   
   switch    highway=steps  switch allow_steps     40 10000
   switch    route=ferry    switch allow_ferries 5.67 10000
+  switch    highway=construction                     10000
   
   add nonpath_penalty
  
@@ -466,13 +480,8 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
   switch    highway=residential|living_street         ( switch ismuddy 2.0 switch isunpaved 1.6 1.2 )
   switch    highway=service                           ( switch ismuddy 1.8 switch isunpaved 1.5 1.1 )
 
-  if istrack then ( add 1.0  max trackclass_penalty
-                             max tracktype_penalty
-                             max surface_penalty
-                             max not_isbike_track_penalty
-                             max roughness_penalty
-                                 wet_penalty   
-                  )
+  if istrack then ( add 1.0  max trackclass_penalty         max tracktype_penalty   max surface_penalty
+                             max not_isbike_track_penalty   max roughness_penalty   wet_penalty                     )
   
  else
    
@@ -496,10 +505,7 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
   cost_of_unknown # above highway tags do not apply
   )
   
-   
-  assign rawcostfactor2 (                                        # MTB_factor_for_road + (non)/cycleroute CF adjustment
-    if greater rawcostfactor 9998 then rawcostfactor
-    else  add ( # cycle route tweak
+  assign cycleroute_tweak  (
         if ( equal cycleroutes_pref 0.0 )  then rawcostfactor                        # ignore cycleroutes, no distinguishing
         else if ( not nodeaccessgranted  ) then add (    multiply rawcostfactor no_network_coef )
                                 (    multiply -1.0 ( multiply cycleroutes_pref network_coef ) )
@@ -513,8 +519,13 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
                             # RCF2 = RCF * ( 1 - crp ) + crp * ( 1- crp )  
         
         else                   rawcostfactor                        # is a cycleroute, but not a considered one
-    )
-    
+    )    
+  
+   
+  assign rawcostfactor2 (                                        # MTB_factor_for_road + (non)/cycleroute CF adjustment
+    if greater rawcostfactor 9997 then rawcostfactor
+    else  
+    add   cycleroute_tweak 
     add   MTB_factor_for_road           # penalizes paved and promotes unpaved roads See *****) for more
           smallpaved_factor_for_road    # penalizes mainroads and unpaved roads, promotes the middle
     
@@ -523,7 +534,7 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
     )  
             
   assign costfactor  # calculations may provide illegal costfactor < 1
-    if greater rawcostfactor2 9998 then rawcostfactor2 else
+    if greater rawcostfactor2 9997 then rawcostfactor2 else
     add
            max 1.0 rawcostfactor2 
            ( max onewaypenalty max accesspenalty  switch allow_traffic_penalty trafficpenalty 0 ) 
@@ -533,7 +544,7 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
   
     
   assign uphillcostfactor = (
-    if greater rawcostfactor2 9998 then rawcostfactor2 else
+    if greater rawcostfactor2 9997 then rawcostfactor2 else
     add ( max onewaypenalty max accesspenalty  switch allow_traffic_penalty trafficpenalty 0 ) 
            # v2.5.5  was moved from rawcostfactor to avoid being affected by MTB_factor and smallpaved_factor
     max 1.0
@@ -552,7 +563,7 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
     )                          
 
   assign downhillcostfactor =  (
-    if greater rawcostfactor2 9998 then rawcostfactor2 else
+    if greater rawcostfactor2 9997 then rawcostfactor2 else
     add ( max onewaypenalty max accesspenalty  switch allow_traffic_penalty trafficpenalty 0 ) 
            # v2.5.5  was moved from rawcostfactor to avoid being affected by MTB_factor and smallpaved_factor
     
