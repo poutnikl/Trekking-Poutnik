@@ -1,7 +1,6 @@
-# Trekking-Poutnik profile, template for Trekking profile variants
-# Version 2.5.7 BETA !fixed smallpaved treatmet wrt elevation evaluation.
-#                    +applied min 9999 for "soft forbidding" to address voice hint generation needs
-#                    +code rearrangement
+# Poutnik's Trekking profile template for Trekking profile variants
+# Version 2.5.8 BETA *changed default initialcost (for minor ways) from 0 to 30, same as for residental
+#                    -removed verbose comments, as they were doubling the wiki
 
 # See also https://github.com/poutnikl/Brouter-profiles/wiki
 # and https://github.com/poutnikl/Trekking-Poutnik
@@ -9,7 +8,7 @@
 # LEGEND
 #
 # Legend above is placeholder for generated comments of final profile
-# See the profile bottom for changelogs and verbose *) comments
+# See the bottom for changelogs. Verbose comments are removed in favour of Github wiki
 
 # bstart /global
 ---context:global
@@ -187,7 +186,7 @@ else if ( highway=primary|primary_link )                    then 120
 else if ( highway=secondary|secondary_link )                then 80
 else if ( highway=tertiary|tertiary_link|unclassified )     then 50
 else if ( highway=residential|living_street|service   )     then 30
-                                                            else 0
+                                                            else 30
 # bend /initialcost                      
 
 # bstart /wayaccess
@@ -677,81 +676,6 @@ assign initialcost =
 # bend /node            
 # bstart /comments            
             
-############################################################################################
-#                                                                                          #
-#                      V E R B O S E   L E G E N D S                                       #
-#                                                                                          #
-############################################################################################
-# *) ISWET             iswet=0 is default with meaning of dry surfaces
-############################################################################################
-# iswet=1 with meaning surfaces are wet. It increases costfactors of potentially bad surfaces,
-# especially those supposed to get muddy/slicky in wet weather, 
-# OTOH it decreases costfactors for better quality tracks or highway network.
-# It shifts the profile little toward fastbike standard profile, 
-# but still focusses on trekking.
-# 
-#
-############################################################################################
-# **)  CYCLEROUTE PERFECTNESS - removed
-# Cycleroutes have calculates their costfactors and turncosts by the same way as regular ways,
-# Regular ways have additional penalty cycleroutes_pref for not being cycleroute. 
-# 0.0 = ignore cycleroutes, 0.1-0.2 Prefering cycloroutes, >0.6 similar as stick_to_cycleroutes
-
-############################################################################################
-#
-############################################################################################
-# ***) ISMUDDY
-############################################################################################
-# ismuddy indicates potentially bad surface conditions during/after wet weather period( mud, slickness )
-# Is used for increasing costfactor for such roads, and decreasing costfastor for minor highways/roads
-# It requires iswet=1
-#
-#
-#############################################################################################
-# ****) MTB_factor
-#############################################################################################
-#
-# MTB_factor tweaks/trims MTB approach of the profile  by preferring/penalizing in progressive order
-# nonpaved  - preferred
-# not paved - little preferred
-# paved     - little penalized
-# mainroads - penalized
-#
-# MTB_factor can be used for one-time tweaking of routing profile for particular trip,
-# or trimming of the profile according to biker preferencing without need of profile deep insight
-#
-# Positive values progessively promote/penalize roads in favour of MTB riding.
-
-# Negative value has the opposite effect, preferring mainroads and penalizing unpaved roads.
-# This effect is somewhat similar to iswet=1 ( *) wet weather mode ),
-# but does not distinguish particular road classes / surfaces / smoothness,
-# aside of mentioned schema below.
-
-# The calculated values below is added to the costfactor.
-
-# + MTB_factor                                    for main roads (tertiaries and better),
-# + 0.33 * MTB_factor                             for paved roads,
-# - 0.33 * MTB_factor                             for not paved/not unpaved roads,
-# - MTB_factor * ( 1 + 0.33 * smoothnesspenalty ) for unpaved roads.  - at MTB_factor 3.0 smootheness is ignored
-#
-# Default   is 0.0 = no effect. 
-# Recommended -0.5 - +1.0
-# Reasonable  -2.0 .. +3.0, 
-#
-# Final costfactor is kept >= 1 for final costfacto values.
-#
-#############################################################################################
-# *****) routelevel
-#############################################################################################
-#
-# global parameter routelevel determines what cyclenetwork levels are preferred by cycleroutes_pref
-#            routelevel = 1  icn only
-#            routelevel = 2  icn + ncn only
-#            routelevel = 3  icn + ncn + rcn only
-#            routelevel = 4  all icn + ncn + rcn + lcn, including sproposed ones, if use_proposed_cn=1
-# Regardless of routelevel value,
-# all current + proposed  networks are used in nodeaccessgranted and isbike 
-#
 #############################################################################################
 # History log
 #############################################################################################
@@ -815,4 +739,7 @@ assign initialcost =
 # Version 2.5.4  ! fixed oneway>bicycle=yes for oneway management
 # Version 2.5.5  ! fixed penalty calculation for bicycle=NO
 # Version 2.5.6 BETA !unified MTB_factor and smallpaved_factor wrt elevation and roughness_penalty
+# Version 2.5.7 BETA !fixed smallpaved treatmet wrt elevation evaluation.
+#                    +applied min 9999 for "soft forbidding" to address voice hint generation needs
+#                    +code rearrangement
 # + bend /comments
