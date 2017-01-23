@@ -1,6 +1,5 @@
 # Poutnik's Trekking profile template for Trekking profile variants
-# Version 2.5.8 BETA *changed default initialcost (for minor ways) from 0 to 30, same as for residental
-#                    -removed verbose comments, as they were doubling the wiki
+# Version 2.5.9 BETA + ford_handling=0/1/2/3
 
 # See also https://github.com/poutnikl/Brouter-profiles/wiki
 # and https://github.com/poutnikl/Trekking-Poutnik
@@ -45,6 +44,7 @@ assign   avoid_unsafe           0 # 0 as default, gives penalty to road without 
 
 assign   path_preference        0.0 # 0.0 as default, try 20.0 to penalize nonpath ways a/o paved ways
 
+assign   ford_handling          1 # 0=ignore(MTB hardcore) / 1=penalize(default) / 2=soft avoiding ( by high penalty ) / 3=hard avoiding (forbidden)
 
 
 # Internal parameters
@@ -117,6 +117,22 @@ assign    pass2coefficient 0
 assign   unsafe_penalty       1.0 # 1 - was 2 in Trekking, but this may cause U-like safe routes
 assign   cost_of_unknown      2.0 # 2 as default, cost of highway=
 
+assign   ford_initialcost_node = if ( equal ford_handling 0 ) then 0 else
+                                 if ( equal ford_handling 1 ) then 500 else
+                                 if ( equal ford_handling 2 ) then 5000 else
+                                 if ( equal ford_handling 3 ) then 1000000 else 0
+
+assign   ford_initialcost_way  = if ( equal ford_handling 0 ) then 0 else
+                                 if ( equal ford_handling 1 ) then 1000 else
+                                 if ( equal ford_handling 2 ) then 10000 else
+                                 if ( equal ford_handling 3 ) then 1000000 else 0
+
+assign   ford_costfactor =       if ( equal ford_handling 0 ) then 0 else
+                                 if ( equal ford_handling 1 ) then 50 else
+                                 if ( equal ford_handling 2 ) then 500 else
+                                 if ( equal ford_handling 3 ) then 9999 else 0
+
+
 # bend /global
 # bstart /way
 ---context:way   # following code refers to way-tags
@@ -162,9 +178,12 @@ assign IsSlickySett = and iswet surface=cobblestone|sett
 assign turncost       if  ismainroad  then 90    else if ispaved then 60   else 30
 # Turn cost is based solely on estimation of road speediness and eventual time cost of turning, partially promoting tracks )
 
+assign isford = and ford=yes ( greater ford_handling 0 )
+
 # bstart /initialcost                      
 assign initialclassifier
 if route=ferry then 1
+else if ( isford )                               then 15
 else if ( highway=motorway|motorway_link )       then 2
 else if ( highway=trunk|trunk_link )             then 3
 else if ( highway=primary|primary_link )         then 4
@@ -181,6 +200,7 @@ else if    ( highway=cycleway )                  then 13
 
 assign initialcost
 if route=ferry then 10000
+else if  ( isford )                                         then ford_initialcost_way  
 else if ( highway=motorway|motorway_link|trunk|trunk_link ) then 500
 else if ( highway=primary|primary_link )                    then 120
 else if ( highway=secondary|secondary_link )                then 80
@@ -472,6 +492,8 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
   switch    highway=construction                     10000
   
   add nonpath_penalty
+
+  add ( if isford then ford_costfactor else 0 ) 
  
   switch    highway=pedestrian                        switch ismuddy 5 3
   switch    highway=bridleway                         switch ismuddy 8 5
@@ -670,6 +692,7 @@ assign initialcost =
               else if highway=stop  then 60 
               else if and highway=crossing bicycle=no then 60 
               else if and highway=crossing crossing=no then 300 # workaround affecting road routing
+              else if ( ford=yes ) then ford_initialcost_node
               else initial_cost_node )
             if bikeaccess then 0  else ( if footaccess then 100 else 1000000 )
 
@@ -742,4 +765,6 @@ assign initialcost =
 # Version 2.5.7 BETA !fixed smallpaved treatmet wrt elevation evaluation.
 #                    +applied min 9999 for "soft forbidding" to address voice hint generation needs
 #                    +code rearrangement
-# + bend /comments
+# Version 2.5.8 BETA *changed default initialcost (for minor ways) from 0 to 30, same as for residental
+#                    -removed verbose comments, as they were doubling the wiki
+# bend /comments
