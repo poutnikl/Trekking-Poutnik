@@ -1,7 +1,6 @@
 # Poutnik's Trekking profile template for Trekking profile variants
-# Version 2.5.10 BETA * ford_handling via MTB_factor
-#                     ! fixing penalizations of empty tracktype and surface
-#                     + added progressive decrease/increase of turncosts for positive/negative MTB_factor
+# Version 2.5.11 BETA * Added automatic switching of routelevel, based on cycleroutes_pref value
+#                     + added explicit considerTurnRestrictions=true
 #
 # See also https://github.com/poutnikl/Brouter-profiles/wiki 
 # and https://github.com/poutnikl/Trekking-Poutnik
@@ -26,7 +25,10 @@ assign   allow_traffic_penalty  1 # 1 as default
 assign   turnInstructionMode  = 1  # 0=none, 1=auto-choose, 2=locus-style, 3=osmand-style
 
 assign   cycleroutes_pref       0.2 # **) costfactor penalty for not being cycleroute
-assign   routelevel             2 # *****)  default =2, 1-icn only, 2 +ncn, 3 +rcn, 4 all
+assign   routelevel_auto        true #v2.5.11
+
+# *****)  default =2, 1-icn only, 2 +ncn, 3 +rcn, 4 all
+assign   routelevel             if routelevel_auto then ( if ( greater cycleroutes_pref 0.2 ) then 4 else 2  )  else  2  #v2.5.11
 
 assign   MTB_factor             0.0 # default 0.0, see ****), see also https://github.com/poutnikl/Brouter-profiles/wiki/Trekking-MTB-Profiles---legend
                                     # major rework ! unified with granularity of smallpaved factor
@@ -46,6 +48,8 @@ assign   use_proposed_cn        1 # 0 as default, considers proposed cycle netwo
 assign   avoid_unsafe           0 # 0 as default, gives penalty to road without bike friendly status.
 
 assign   path_preference        0.0 # 0.0 as default, try 20.0 to penalize nonpath ways a/o paved ways
+
+assign   considerTurnRestrictions = true  #v2.5.11
 
 # Internal parameters
 
@@ -778,4 +782,7 @@ assign initialcost =
 # Version 2.5.8 BETA *changed default initialcost (for minor ways) from 0 to 30, same as for residental
 #                    -removed verbose comments, as they were doubling the wiki
 # Version 2.5.9 BETA + ford_handling parameter
+# Version 2.5.10 BETA * ford_handling via MTB_factor
+#                     ! fixing penalizations of empty tracktype and surface
+#                     + added progressive decrease/increase of turncosts for positive/negative MTB_factor
 # bend /comments
