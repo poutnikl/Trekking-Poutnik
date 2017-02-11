@@ -1,6 +1,5 @@
 # Poutnik's Trekking profile template for Trekking profile variants
-# Version 2.5.11 BETA * Added automatic switching of routelevel, based on cycleroutes_pref value
-#                     + added explicit considerTurnRestrictions=true
+# Version 2.5.12 BETA * changed priority system for cycleroute classes
 #
 # See also https://github.com/poutnikl/Brouter-profiles/wiki 
 # and https://github.com/poutnikl/Trekking-Poutnik
@@ -25,10 +24,11 @@ assign   allow_traffic_penalty  1 # 1 as default
 assign   turnInstructionMode  = 1  # 0=none, 1=auto-choose, 2=locus-style, 3=osmand-style
 
 assign   cycleroutes_pref       0.2 # **) costfactor penalty for not being cycleroute
-assign   routelevel_auto        true #v2.5.11
 
+# routelevel is obsolete in, about to remove in v2.5.12
+#assign   routelevel_auto        true # obsolete in v2.5.12
 # *****)  default =2, 1-icn only, 2 +ncn, 3 +rcn, 4 all
-assign   routelevel             if routelevel_auto then ( if ( greater cycleroutes_pref 0.2 ) then 4 else 2  )  else  2  #v2.5.11
+#assign   routelevel             if routelevel_auto then ( if ( greater cycleroutes_pref 0.2 ) then 4 else 2  )  else  2  #v2.5.11
 
 assign   MTB_factor             0.0 # default 0.0, see ****), see also https://github.com/poutnikl/Brouter-profiles/wiki/Trekking-MTB-Profiles---legend
                                     # major rework ! unified with granularity of smallpaved factor
@@ -52,6 +52,12 @@ assign   path_preference        0.0 # 0.0 as default, try 20.0 to penalize nonpa
 assign   considerTurnRestrictions = true  #v2.5.11
 
 # Internal parameters
+
+#new in 2.5.12
+assign    icn_crp multiply 1.0 cycleroutes_pref 
+assign    ncn_crp multiply 1.0 cycleroutes_pref 
+assign    rcn_crp multiply 0.50 cycleroutes_pref
+assign    lcn_crp multiply 0.50 cycleroutes_pref
 
 assign   uphillcostvalue        switch equal hills 1 70
                                 switch equal hills 2 80
@@ -87,7 +93,7 @@ assign abs_smallpaved_factor  multiply ( switch positive_smallpaved_factor 1.0 -
          
 
 assign   MTB_hillcostfactor   multiply 0.3333 ( min 3.0  ( max -3.0 MTBminusSP_factor ) )
-                  # for MTBminusSP_factor <=3 is -1, if  >=3 is 1, otherwise 0.3333 * MTBminusSP_factor
+                  # for MTBminusSP_factor <=-3 is -1, if  >=3 is 1, otherwise 0.3333 * MTBminusSP_factor
                   # It changes hillcosts to be 0.0 at MTBminusSP_factor = 3.0 and twice at -3.0
                   # if MTB_factor = 1 , then downhillcost decreases e.g. from 60 to 40
                   # if MTB_factor = -1 , then downhillcost increases e.g. from 60 to 80
@@ -111,9 +117,6 @@ assign   elevationbufferreduce  if ( equal hills 4 ) then 0.0 else ( multiply 0.
 
 assign   uphillCFshift     0.0 # experimental shifting of up/downhillcostfactors as alternative way of 
 assign   downhillCFshift   0.0 # prioritizing/penalizing of up/downhills, based on length, not elevation
-
-assign    network_coef           add 1.0 ( multiply -1.0 cycleroutes_pref )  # 1 - cycleroutes_pref
-assign    no_network_coef        add 1.0 cycleroutes_pref                    # 1 + cycleroutes_pref
 
 assign    pass1coefficient 1.8
 assign    pass2coefficient 0
@@ -162,15 +165,17 @@ assign any_cn or any_cn_yes switch use_proposed_cn any_cn_proposed 0
 
 assign nodeaccessgranted or any_cycleroute any_cn
 
-assign is_ldcr if      not nodeaccessgranted         then false
-               else if equal cycleroutes_pref 0.0    then false
-               else if equal routelevel 1 then isicn
-               else if equal routelevel 2 then or isicn isncn
-               else if equal routelevel 3 then or or isrcn isncn isicn
-               else if equal routelevel 4 then any_cn
-               else or isicn isncn
+# routelevel obsolete since 2.5.12, about to remove
+#assign is_ldcr if      not nodeaccessgranted         then false
+#               else if equal cycleroutes_pref 0.0    then false
+#               else if equal routelevel 1 then isicn
+#               else if equal routelevel 2 then or isicn isncn
+#               else if equal routelevel 3 then or or isrcn isncn isicn
+#               else if equal routelevel 4 then any_cn
+#               else or isicn isncn
                      
-
+assign is_ldcr if (  equal cycleroutes_pref 0.0 )   then false else nodeaccessgranted
+                                       
 assign isbike or bicycle=yes|permissive|designated nodeaccessgranted
 assign ispaved surface=paved|asphalt|concrete|paving_stones
 assign isunpaved not or surface= or ispaved or surface=fine_gravel surface=cobblestone
@@ -540,21 +545,38 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
   cost_of_unknown # above highway tags do not apply
   )
   
+  #new in 2.5.12
+  assign crp = 
+      if equal cycleroutes_pref 0.0 then 0.0 else
+      if nodeaccessgranted then ( 
+          if islcn then lcn_crp else
+          if isrcn then rcn_crp else
+          if isncn then ncn_crp else
+          if isicn then icn_crp else 
+                        icn_crp
+      )
+      else
+          icn_crp
+          
+  assign crp_sub = sub 1 crp        
+      
   assign cycleroute_tweak  (
-        if ( equal cycleroutes_pref 0.0 )  then rawcostfactor                        # ignore cycleroutes, no distinguishing
-        else if ( not nodeaccessgranted  ) then add (    multiply rawcostfactor no_network_coef )
-                                (    multiply -1.0 ( multiply cycleroutes_pref network_coef ) )
-                            # is not a cycleroute
-                            # rawcostfactor2 = rawcostfactor * no_network_coef - cycleroutes_pref * network_coef
-                            # RCF2 = RCF * ( 1 + crp ) - crp * ( 1- crp )  
-            else if is_ldcr                       then add (    multiply rawcostfactor network_coef )
-                                (    multiply cycleroutes_pref network_coef ) 
-                            # is a considered cycleroute
-                            # rawcostfactor2 = rawcostfactor * network_coef + cycleroutes_pref * network_coef
-                            # RCF2 = RCF * ( 1 - crp ) + crp * ( 1- crp )  
-        
-        else                   rawcostfactor                        # is a cycleroute, but not a considered one
-    )    
+      if ( equal cycleroutes_pref 0.0 )  then
+          # ignore cycleroutes, no distinguishing
+          rawcostfactor
+      else if ( nodeaccessgranted  ) then
+          # is not a cycleroute
+          # rawcostfactor2 = rawcostfactor * no_network_coef - cycleroutes_pref * network_coef
+          # RCF2 = RCF * ( 1 + crp ) - crp * ( 1- crp )  
+          sub (    multiply rawcostfactor add 1 crp )
+              (    multiply crp           crp_sub )
+      else 
+          # is a considered cycleroute
+          # rawcostfactor2 = rawcostfactor * network_coef + cycleroutes_pref * network_coef
+          # RCF2 = RCF * ( 1 - crp ) + crp * ( 1- crp )  
+          add (    multiply rawcostfactor crp_sub )
+              (    multiply crp           crp_sub ) 
+  )    
   
    
   assign rawcostfactor2 (                                        # MTB_factor_for_road + (non)/cycleroute CF adjustment
@@ -785,4 +807,8 @@ assign initialcost =
 # Version 2.5.10 BETA * ford_handling via MTB_factor
 #                     ! fixing penalizations of empty tracktype and surface
 #                     + added progressive decrease/increase of turncosts for positive/negative MTB_factor
+# Version 2.5.11 BETA * Added automatic switching of routelevel, based on cycleroutes_pref value
+#                     + added explicit considerTurnRestrictions=true
+# Version 2.5.12 BETA * changed priority system for cycleroute classes
+
 # bend /comments
