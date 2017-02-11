@@ -564,7 +564,7 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
       if ( equal cycleroutes_pref 0.0 )  then
           # ignore cycleroutes, no distinguishing
           rawcostfactor
-      else if ( nodeaccessgranted  ) then
+      else if ( not nodeaccessgranted  ) then
           # is not a cycleroute
           # rawcostfactor2 = rawcostfactor * no_network_coef - cycleroutes_pref * network_coef
           # RCF2 = RCF * ( 1 + crp ) - crp * ( 1- crp )  
