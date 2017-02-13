@@ -1,5 +1,5 @@
 # Poutnik's Trekking profile template for Trekking profile variants
-# Version 2.5.12 BETA * changed priority system for cycleroute classes
+# Version 2.5.13 BETA * tuned priority system for cycleroute classes
 #
 # See also https://github.com/poutnikl/Brouter-profiles/wiki 
 # and https://github.com/poutnikl/Trekking-Poutnik
@@ -13,36 +13,23 @@
 # bstart /global
 ---context:global
 assign   iswet                  0 # 0 as default, *) flag for weather conditions
-
-assign   consider_elevation     1 # 1 as default
-assign   consider_smoothness    1 # 1 as default
-
-assign   allow_steps            1 # 1 as default
-assign   allow_ferries          1 # 1 as default
-assign   allow_traffic_penalty  1 # 1 as default
-
-assign   turnInstructionMode  = 1  # 0=none, 1=auto-choose, 2=locus-style, 3=osmand-style
-
+assign   turnInstructionMode  = 1 # 0=none, 1=auto-choose, 2=locus-style, 3=osmand-style
 assign   cycleroutes_pref       0.2 # **) costfactor penalty for not being cycleroute
-
-# routelevel is obsolete in, about to remove in v2.5.12
-#assign   routelevel_auto        true # obsolete in v2.5.12
-# *****)  default =2, 1-icn only, 2 +ncn, 3 +rcn, 4 all
-#assign   routelevel             if routelevel_auto then ( if ( greater cycleroutes_pref 0.2 ) then 4 else 2  )  else  2  #v2.5.11
-
-assign   MTB_factor             0.0 # default 0.0, see ****), see also https://github.com/poutnikl/Brouter-profiles/wiki/Trekking-MTB-Profiles---legend
-                                    # major rework ! unified with granularity of smallpaved factor
-assign   smallpaved_factor      0.0 # default 0.0, if <> 0.0 then it penalizes/promotes mainroads and unpaved roads for positive/negative values.
-                                    # reworked                                    
+assign   MTB_factor             0.0 # default 0.0, see https://github.com/poutnikl/Brouter-profiles/wiki/Trekking-MTB-Profiles---legend
+assign   smallpaved_factor      0.0 # default 0.0, see https://github.com/poutnikl/Brouter-profiles/wiki/MTB_factor-and-smallpaved_factor
                                     
 assign   hills                  1 # 1=default,                         0=trekking profile default,                1=try to avoid steep hills >3.0%, 
                                   # 2=velomobile-like avoiding slopes, 3= simulates ascend/length time equiv.     4=valley mode
 
-assign   StrictNOBicycleaccess  0 # 0 allows but penalizes foot only access / 1 forbides foot only access.
-
-
-assign   valley_nonflat_multiplier = 2.0
+assign   consider_elevation     1 # 1 as default
+assign   consider_smoothness    1 # 1 as default
+assign   allow_steps            1 # 1 as default
+assign   allow_ferries          1 # 1 as default
+assign   allow_traffic_penalty  1 # 1 as default
+                                
                                   
+assign   StrictNOBicycleaccess          0 # 0 allows but penalizes foot only access / 1 forbides foot only access.
+assign   valley_nonflat_multiplier = 2.0
 
 assign   use_proposed_cn        1 # 0 as default, considers proposed cycle networks as unmarked but valid cycleroutes.
 assign   avoid_unsafe           0 # 0 as default, gives penalty to road without bike friendly status.
@@ -54,10 +41,11 @@ assign   considerTurnRestrictions = true  #v2.5.11
 # Internal parameters
 
 #new in 2.5.12
-assign    icn_crp multiply 1.0 cycleroutes_pref 
-assign    ncn_crp multiply 1.0 cycleroutes_pref 
-assign    rcn_crp multiply 0.50 cycleroutes_pref
-assign    lcn_crp multiply 0.50 cycleroutes_pref
+assign    local_cr_coef = 0.5
+assign    icn_crp cycleroutes_pref 
+assign    ncn_crp cycleroutes_pref 
+assign    rcn_crp multiply local_cr_coef cycleroutes_pref
+assign    lcn_crp multiply local_cr_coef cycleroutes_pref
 
 assign   uphillcostvalue        switch equal hills 1 70
                                 switch equal hills 2 80
