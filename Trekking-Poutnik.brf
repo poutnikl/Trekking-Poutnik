@@ -1,5 +1,5 @@
 # Poutnik's Trekking profile template for Trekking profile variants
-# Version 2.5.13 BETA * tuned priority system for cycleroute classes
+# Version 2.5.14 BETA * redesigned effects of MTB + smallpaved factors
 #
 # See also https://github.com/poutnikl/Brouter-profiles/wiki 
 # and https://github.com/poutnikl/Trekking-Poutnik
@@ -73,18 +73,24 @@ assign   validForBikes        1
 # positive smallpaved factor effect subtracts itself from MTB factor effect
 # on MTB-like OSM way preference and elevation effect attenuation
 
-assign   MTBminusSP_factor   sub MTB_factor ( max 0 smallpaved_factor ) 
+#v2.5.14 assign   MTBminusSP_factor           sub MTB_factor ( max 0 smallpaved_factor )  - pre v2.5.14
 
-assign positive_smallpaved_factor  or ( equal smallpaved_factor 0.0 ) ( greater smallpaved_factor 0.0 )
-         
-assign abs_smallpaved_factor  multiply ( switch positive_smallpaved_factor 1.0 -1.0 ) smallpaved_factor 
-         
+#v2.5.14
+assign   Hill_factor            min 3 max -3 sub MTB_factor smallpaved_factor              
+assign   Road_factor            min 3 max -3 ( sub ( sub 0.0 MTB_factor ) smallpaved_factor )
+assign   HR_factor              min 3 max -3 multiply 0.5 ( sub Hill_factor Road_factor )  
+# avg of the 2 above, MTB F only --> MTB F, SP_F only --> - SP_F 
 
-assign   MTB_hillcostfactor   multiply 0.3333 ( min 3.0  ( max -3.0 MTBminusSP_factor ) )
-                  # for MTBminusSP_factor <=-3 is -1, if  >=3 is 1, otherwise 0.3333 * MTBminusSP_factor
-                  # It changes hillcosts to be 0.0 at MTBminusSP_factor = 3.0 and twice at -3.0
-                  # if MTB_factor = 1 , then downhillcost decreases e.g. from 60 to 40
-                  # if MTB_factor = -1 , then downhillcost increases e.g. from 60 to 80
+#assign   MTBminusSP_factor           sub MTB_factor smallpaved_factor
+#assign   positive_smallpaved_factor  or ( equal smallpaved_factor 0.0 ) ( greater smallpaved_factor 0.0 )
+
+assign   positive_smallpaved_factor  not lesser smallpaved_factor 0.0
+assign   abs_smallpaved_factor       multiply ( switch positive_smallpaved_factor 1.0 -1.0 ) smallpaved_factor 
+
+assign   MTB_hillcostfactor   multiply 0.3333 Hill_factor 
+                  # It changes hillcosts to be 0.0 at Hill_factor = 3.0 and twice at -3.0
+                  # if Hill_factor = 1  , then downhillcost decreases e.g. from 60 to 40
+                  # if Hill_factor = -1 , then downhillcost increases e.g. from 60 to 80
                   
                   
 assign   downhillcost if ( consider_elevation  )  then 
@@ -116,13 +122,13 @@ assign   c_ford_initialcost_node = 500
 assign   c_ford_initialcost_way  = 1000
 assign   c_ford_costfactor =  50
 
-assign   ford_handling_coef    = if lesser MTBminusSP_factor -1.49 then 1000000 else
-                                 if lesser MTBminusSP_factor -0.99 then 20 else 
-                                 if lesser MTBminusSP_factor -0.49 then 5.0 else 
-                                 if lesser MTBminusSP_factor  0.01 then 1.0 else 
-                                 if lesser MTBminusSP_factor  0.51 then 0.4 else 
-                                 if lesser MTBminusSP_factor  1.01 then 0.1 else 
-                                 if lesser MTBminusSP_factor  1.51 then 0.05 else 0.0
+assign   ford_handling_coef    = if lesser Hill_factor -1.49 then 1000000 else
+                                 if lesser Hill_factor -0.99 then 20 else 
+                                 if lesser Hill_factor -0.49 then 5.0 else 
+                                 if lesser Hill_factor  0.01 then 1.0 else 
+                                 if lesser Hill_factor  0.51 then 0.4 else 
+                                 if lesser Hill_factor  1.01 then 0.1 else 
+                                 if lesser Hill_factor  1.51 then 0.05 else 0.0
 
 assign   ford_initialcost_way =  if ( equal ford_handling_coef 10000000 ) then 1000000 else 
                                  if ( equal ford_handling_coef 0.0 ) then 0.0 else
@@ -180,7 +186,7 @@ assign ismuddy and iswet
 assign IsSlickySett = and iswet surface=cobblestone|sett
 
 
-assign turncost       sub ( if  ismainroad  then 90    else if ispaved then 60   else 30 ) ( multiply 30 MTB_factor )
+assign turncost       sub ( if  ismainroad  then 90    else if ispaved then 60   else 30 ) ( multiply 30 Hill_factor )
 #v2.5.10 decrease turncost for positive MTB factor, increase for negative one
 # Turn cost is based solely on estimation of road speediness and eventual time cost of turning, partially promoting tracks )
 
@@ -215,21 +221,17 @@ else if ( highway=residential|living_street|service   )     then 30
                                                             else 30
 # bend /initialcost                      
 
-# bstart /wayaccess
+# bstart /waccess
+
 assign defaultaccess =
        if access= then not motorroad=yes
        else if access=private|no then false
        else true    
- 
    
 assign bikeaccess =
        if nodeaccessgranted then true
-       else if bicycle= then
-       (
-         if vehicle= then defaultaccess
-         else not vehicle=private|no
-       )
-       else not bicycle=private|no|dismount  
+       else if bicycle= then   (  if vehicle= then defaultaccess  else not vehicle=private|no   )
+                        else  not bicycle=private|no|dismount  
 
 assign footaccess =
        if bikeaccess then true
@@ -243,14 +245,13 @@ assign accesspenalty =
         ( if StrictNOBicycleaccess then 10000 else 4 )
        else 10000
 
-# bend /wayaccess
-
-# handle one-ways. On primary roads, wrong-oneways should
-# be close to forbidden, while on other ways we just add
-# 4 to the costfactor (making it at least 5 - you are allowed
-# to push your bike)
+# bend /waccess
 
 # bstart /onewaypen
+
+# handle one-ways. On primary roads, wrong-oneways should be close to forbidden,
+# while on other ways we just add 4 to the costfactor ,
+# making it at least 5, as you are allowed to push your bike.
 
 assign badoneway =
        if reversedirection=yes then
@@ -306,7 +307,12 @@ assign roughness_penalty max smoothness_penalty mtb_scale_penalty
 # bend /roughness_penalty
 
 # bstart /MTB_SP_tweaks
-assign univ_factor_coef = (
+
+assign rough_coef = add 1.0 ( multiply 0.33 roughness_penalty ) 
+
+assign univ_factor_coef = 
+
+(
     
          if ( highway=motorway|motorway_link|trunk|trunk_link ) then 1.0
     else if ( highway=primary|primary_link )                    then 0.9
@@ -314,51 +320,49 @@ assign univ_factor_coef = (
     else if ( highway=tertiary|tertiary_link )                  then 0.4
     else if ( highway=unclassified )                            then 0.25
     else if ( highway=residential|living_street|service|pedestrian|footway   )
-                                                                then switch ispaved 0.25 switch isunpaved -0.4 0.0
-    else if not highway=track|road|path                         then switch ispaved 0.25 switch isunpaved -0.4 0.0 # 
-    else if highway=track|road then (                           # not path
-              
+                       then switch ispaved 0.25 switch isunpaved -0.4 0.0
+    else if not highway=track|road|path                         
+                       then switch ispaved 0.25 switch isunpaved -0.4 0.0
+    else if highway=track|road then                            # not path
+         (     
               if surface=concrete                               then -0.2
               else if and tracktype=grade1 ispaved              then 0.2
               else if or tracktype=grade1 ispaved               then 0.1
-              else multiply ( add 1.0 ( multiply 0.33 roughness_penalty ) )
-                ( if and surface=  tracktype=                   then
-                               ( if isbike then 0.0 else -0.25 )  #v2.5.10
-                  else if surface=cobblestone                        then -0.4
-                  else if surface=fine_gravel                   then -0.4
-                  else if surface=                              then switch tracktype=grade2|grade3 -0.4 -0.7
-                  else if surface=compacted                     then -0.25
-                  else if surface=grass                         then -0.8
-                  else if surface=ground|gravel|pebblestone|mud then -1.0
-                                                                else -1.0
-                )                                                  
+              else multiply rough_coef
+                            ( 
+                              if and surface=  tracktype=   then  
+                                  ( if isbike then 0.0 else -0.25 )  #v2.5.10
+                              else if surface=cobblestone       then -0.4
+                              else if surface=fine_gravel                   then -0.4
+                              else if surface=                              then switch tracktype=grade2|grade3 -0.4 -0.7
+                              else if surface=compacted                     then -0.25
+                              else if surface=grass                         then -0.8
+                              else if surface=ground|gravel|pebblestone|mud then -1.0
+                              else -1.0
+                            )                                                  
          )   
          # is path
-     else ( multiply ( add 1.0 ( multiply 0.33 roughness_penalty ) )
-                   ( if surface=concrete                   then -0.3
+     else ( multiply rough_coef
+                   ( 
+                     if surface=concrete                   then -0.3
                      else if ispaved                       then  0.1
                      else if surface=compacted|fine_gravel then -0.4
                      else                                       -1.0
-                     )
+                   )
           )           
                    
 )
 
-assign MTB_factor_for_road
-   if  ( equal MTB_factor 0.0 ) then 0.0  
-                                else multiply MTB_factor  univ_factor_coef
+assign MTB_factor_for_road    if  ( equal MTB_factor 0.0 ) then 0.0 else multiply MTB_factor  univ_factor_coef
    
-assign abs_univ_factor =  
-    if ( greater 0.0 univ_factor_coef ) then ( multiply -1.0 univ_factor_coef )
-                                        else univ_factor_coef   
+assign abs_univ_factor =      if ( greater 0.0 univ_factor_coef ) then ( multiply -1.0 univ_factor_coef ) else univ_factor_coef   
     
 assign smallpaved_factor_for_road   
 
     if  ( equal smallpaved_factor 0.0 ) then 0.0 
     else multiply abs_smallpaved_factor 
                  ( if  positive_smallpaved_factor then abs_univ_factor  else  ( sub 1.0 abs_univ_factor )  )
-
-# bstart /MTB_SP_tweaks                                             
+# bend /MTB_SP_tweaks                                             
                                              
 # bstart /trackpenalties
 assign trackclass_penalty  (
@@ -798,5 +802,6 @@ assign initialcost =
 # Version 2.5.11 BETA * Added automatic switching of routelevel, based on cycleroutes_pref value
 #                     + added explicit considerTurnRestrictions=true
 # Version 2.5.12 BETA * changed priority system for cycleroute classes
-
+# Version 2.5.13 BETA * tuned priority system for cycleroute classes
+# Version 2.5.14 BETA * redesigned effects of MTB + smallpaved factors
 # bend /comments
