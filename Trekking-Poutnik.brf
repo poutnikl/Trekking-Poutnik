@@ -1,5 +1,6 @@
 # Poutnik's Trekking profile template for Trekking profile variants
-# Version 2.5.14 BETA * redesigned effects of MTB + smallpaved factors
+# Version 2.5.15 BETA * changed default access
+#                     + set noncycleroute highway=cycleway neutral wrt cycleroute_pref
 #
 # See also https://github.com/poutnikl/Brouter-profiles/wiki 
 # and https://github.com/poutnikl/Trekking-Poutnik
@@ -7,8 +8,7 @@
 # LEGEND
 #
 # Legend above is the placeholder for generated comments of final profiles
-# See the bottom for changelogs. 
-# Verbose feature comments were removed in favour of Github wiki
+# See the bottom for changelogs. Verbose feature comments were removed in favour of Github wiki
 
 # bstart /global
 ---context:global
@@ -17,6 +17,7 @@ assign   turnInstructionMode  = 1 # 0=none, 1=auto-choose, 2=locus-style, 3=osma
 assign   cycleroutes_pref       0.2 # **) costfactor penalty for not being cycleroute
 assign   MTB_factor             0.0 # default 0.0, see https://github.com/poutnikl/Brouter-profiles/wiki/Trekking-MTB-Profiles---legend
 assign   smallpaved_factor      0.0 # default 0.0, see https://github.com/poutnikl/Brouter-profiles/wiki/MTB_factor-and-smallpaved_factor
+assign   avoid_unsafe           0 # 0 as default, gives penalty to road without bike friendly status.
                                     
 assign   hills                  1 # 1=default,                         0=trekking profile default,                1=try to avoid steep hills >3.0%, 
                                   # 2=velomobile-like avoiding slopes, 3= simulates ascend/length time equiv.     4=valley mode
@@ -32,7 +33,7 @@ assign   StrictNOBicycleaccess          0 # 0 allows but penalizes foot only acc
 assign   valley_nonflat_multiplier = 2.0
 
 assign   use_proposed_cn        1 # 0 as default, considers proposed cycle networks as unmarked but valid cycleroutes.
-assign   avoid_unsafe           0 # 0 as default, gives penalty to road without bike friendly status.
+
 
 assign   path_preference        0.0 # 0.0 as default, try 20.0 to penalize nonpath ways a/o paved ways
 
@@ -47,26 +48,14 @@ assign    ncn_crp cycleroutes_pref
 assign    rcn_crp multiply local_cr_coef cycleroutes_pref
 assign    lcn_crp multiply local_cr_coef cycleroutes_pref
 
-assign   uphillcostvalue        switch equal hills 1 70
-                                switch equal hills 2 80
-                                switch equal hills 3 60
-                                switch equal hills 4 150
-                                0 
-assign   uphillcutoffvalue      switch equal hills 1 3.0
-                                switch equal hills 2 1.0
-                                switch equal hills 3 0.5
-                                switch equal hills 4 1.5
-                                1.5 
-assign   downhillcutoffvalue    switch equal hills 1 1.5
-                                switch equal hills 2 0.5
-                                switch equal hills 3 1.5
-                                switch equal hills 4 1.5
-                                1.5 
-assign   downhillcostvalue      switch equal hills 1 60
-                                switch equal hills 2 80
-                                switch equal hills 3  0
-                                switch equal hills 4 150
-                                60  
+assign   uphillcostvalue        switch equal hills 1 70   switch equal hills 2 80
+                                switch equal hills 3 60   switch equal hills 4 150     0 
+assign   uphillcutoffvalue      switch equal hills 1 3.0  switch equal hills 2 1.0
+                                switch equal hills 3 0.5  switch equal hills 4 1.5   1.5 
+assign   downhillcutoffvalue    switch equal hills 1 1.5  switch equal hills 2 0.5
+                                switch equal hills 3 1.5  switch equal hills 4 1.5   1.5 
+assign   downhillcostvalue      switch equal hills 1 60   switch equal hills 2 80
+                                switch equal hills 3 0    switch equal hills 4 150    60  
 
 assign   validForBikes        1
 
@@ -78,8 +67,6 @@ assign   validForBikes        1
 #v2.5.14
 assign   Hill_factor            min 3 max -3 sub MTB_factor smallpaved_factor              
 assign   Road_factor            min 3 max -3 ( sub ( sub 0.0 MTB_factor ) smallpaved_factor )
-assign   HR_factor              min 3 max -3 multiply 0.5 ( sub Hill_factor Road_factor )  
-# avg of the 2 above, MTB F only --> MTB F, SP_F only --> - SP_F 
 
 #assign   MTBminusSP_factor           sub MTB_factor smallpaved_factor
 #assign   positive_smallpaved_factor  or ( equal smallpaved_factor 0.0 ) ( greater smallpaved_factor 0.0 )
@@ -548,26 +535,28 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
                         icn_crp
       )
       else
-          icn_crp
+          0.0
           
   assign crp_sub = sub 1 crp        
       
   assign cycleroute_tweak  (
-      if ( equal cycleroutes_pref 0.0 )  then
+      if ( equal cycleroutes_pref 0.0 )  then  
+
+# highway=cycleway )  then  #cycleway added in v2.5.15
+
           # ignore cycleroutes, no distinguishing
           rawcostfactor
-      else if ( not nodeaccessgranted  ) then
+      else if ( not nodeaccessgranted  ) then   #v2.5.15 cycleway
+          if highway=cycleway then rawcostfactor else
           # is not a cycleroute
           # rawcostfactor2 = rawcostfactor * no_network_coef - cycleroutes_pref * network_coef
           # RCF2 = RCF * ( 1 + crp ) - crp * ( 1- crp )  
-          sub (    multiply rawcostfactor add 1 crp )
-              (    multiply crp           crp_sub )
+          sub (    multiply rawcostfactor add 1 crp )    (    multiply crp           crp_sub )
       else 
           # is a considered cycleroute
           # rawcostfactor2 = rawcostfactor * network_coef + cycleroutes_pref * network_coef
           # RCF2 = RCF * ( 1 - crp ) + crp * ( 1- crp )  
-          add (    multiply rawcostfactor crp_sub )
-              (    multiply crp           crp_sub ) 
+          add (    multiply rawcostfactor crp_sub )      (    multiply crp           crp_sub ) 
   )    
   
    
@@ -696,7 +685,7 @@ assign classifiermask add          isbadoneway
 assign   initial_cost_node    0     # 0 as default
 
 assign defaultaccess =
-       if ( access= ) then true # add default barrier restrictions here!
+       if ( access= ) then not barrier=gate # add default barrier restrictions here! - modified v2.5.15
        else if ( access=private|no ) then false
        else true
 
@@ -804,4 +793,6 @@ assign initialcost =
 # Version 2.5.12 BETA * changed priority system for cycleroute classes
 # Version 2.5.13 BETA * tuned priority system for cycleroute classes
 # Version 2.5.14 BETA * redesigned effects of MTB + smallpaved factors
+# Version 2.5.15 BETA * changed default access
+#                     + set noncycleroute highway=cycleway neutral wrt cycleroute_pref
 # bend /comments
