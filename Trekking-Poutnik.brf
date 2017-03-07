@@ -1,5 +1,5 @@
 # Poutnik's Trekking profile template for Trekking profile variants
-# Version 2.5.18 BETA * tweaked again cycleroute preferencing
+# Version 2.5.19 BETA * tweaked again cycleroute preferencing 
 #
 # See also https://github.com/poutnikl/Brouter-profiles/wiki 
 # and https://github.com/poutnikl/Trekking-Poutnik
@@ -43,12 +43,17 @@ assign   considerTurnRestrictions = true  #v2.5.11
 #new in 2.5.12
 #reworked in 2.5.17
 #reworked in 2.5.18 - multiplicative
+#reworked in 2.5.19 - back addititive + local route progressive for cycleroute pref <=1
 assign    local_cr_coef = 0.4
-assign    icn_crp 1.0
-assign    ncn_crp 1.0
-assign    rcn_crp add 1.0 multiply local_cr_coef cycleroutes_pref
-assign    lcn_crp add 1.0 multiply local_cr_coef cycleroutes_pref
-assign    nor_crp add 1.0 cycleroutes_pref
+assign    icn_crp 0.0
+assign    ncn_crp icn_crp
+assign    rcn_crp multiply local_cr_coef multiply cycleroutes_pref min  1.0  cycleroutes_pref 
+# cycleroutes_pref -> local_cr_pref  for local_cr_coef 0.4
+# 2.0 -> 0.8  / 1.0 -> 0.4 / 0.5 -> 0.1 / 0.25 -> 0.025 / 0.2 -> 0.016 / 0.1 -> 0.004
+
+assign    lcn_crp rcn_crp
+assign    nor_crp cycleroutes_pref
+
 
 assign   uphillcostvalue        switch equal hills 1 70   switch equal hills 2 80
                                 switch equal hills 3 60   switch equal hills 4 150     0 
@@ -147,16 +152,7 @@ assign any_cn_proposed or lcn=proposed or rcn=proposed ncn=proposed
 assign any_cn or any_cn_yes switch use_proposed_cn any_cn_proposed 0
 
 assign nodeaccessgranted or any_cycleroute any_cn
-
-# routelevel obsolete since 2.5.12, about to remove
-#assign is_ldcr if      not nodeaccessgranted         then false
-#               else if equal cycleroutes_pref 0.0    then false
-#               else if equal routelevel 1 then isicn
-#               else if equal routelevel 2 then or isicn isncn
-#               else if equal routelevel 3 then or or isrcn isncn isicn
-#               else if equal routelevel 4 then any_cn
-#               else or isicn isncn
-                     
+                   
 assign is_ldcr if (  equal cycleroutes_pref 0.0 )   then false else nodeaccessgranted
                                        
 assign isbike or bicycle=yes|permissive|designated nodeaccessgranted
@@ -532,46 +528,13 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
   cost_of_unknown # above highway tags do not apply
   )
   
-  # new in 2.5.12, removed  in 2.5.17
-  # assign crp = 
-      # if equal cycleroutes_pref 0.0 then 0.0 else
-      # if nodeaccessgranted then ( 
-          # if islcn then lcn_crp else
-          # if isrcn then rcn_crp else
-          # if isncn then ncn_crp else
-          # if isicn then icn_crp else 
-                        # icn_crp
-      # )
-      # else
-          # 0.0
-          
-  # assign crp_sub = sub 1 crp        # removed  in 2.5.17
-
- # removed  in 2.5.17  
-  # assign cycleroute_tweak  (
-      # if ( equal cycleroutes_pref 0.0 )  then  
-
-# highway=cycleway )  then  #cycleway added in v2.5.15 
-
-          # ignore cycleroutes, no distinguishing
-          # rawcostfactor
-      # else if ( not nodeaccessgranted  ) then   #v2.5.15 cycleway
-          # if highway=cycleway then rawcostfactor else
-          # is not a cycleroute
-          # rawcostfactor2 = rawcostfactor * no_network_coef - cycleroutes_pref * network_coef
-          # RCF2 = RCF * ( 1 + crp ) - crp * ( 1- crp )  
-          # sub (    multiply rawcostfactor add 1 crp )    (    multiply crp           crp_sub )
-      # else 
-          # is a considered cycleroute
-          # rawcostfactor2 = rawcostfactor * network_coef + cycleroutes_pref * network_coef
-          # RCF2 = RCF * ( 1 - crp ) + crp * ( 1- crp )  
-          # add (    multiply rawcostfactor crp_sub )      (    multiply crp           crp_sub ) 
-  # )    
   
   assign cycleroute_tweak  
   #reworked in 2.5.18 - multiplicative
-         if ( equal cycleroutes_pref 0.0 )  then 1.0 else
-         if ( highway=cycleway )            then 1.0 else
+  #reworked in 2.5.19 - back addititive + local route progressive for cycroute pref <=1
+
+         if ( equal cycleroutes_pref 0.0 )  then 0.0 else
+         if ( highway=cycleway )            then 0.0 else
          if islcn then lcn_crp else
          if isrcn then rcn_crp else
          if isncn then ncn_crp else
@@ -582,12 +545,10 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
     if greater rawcostfactor 9997 then rawcostfactor
     else  
     #reworked in 2.5.18 - multiplicative
-    multiply   cycleroute_tweak 
-    ( 
-      add   rawcostfactor
-      add   MTB_factor_for_road           # penalizes paved and promotes unpaved roads See *****) for more
-            smallpaved_factor_for_road    # penalizes mainroads and unpaved roads, promotes the middle
-      )
+    add   cycleroute_tweak 
+    add   rawcostfactor
+    add   MTB_factor_for_road           # penalizes paved and promotes unpaved roads See *****) for more
+          smallpaved_factor_for_road    # penalizes mainroads and unpaved roads, promotes the middle
     )  
             
   assign costfactor  # calculations may provide illegal costfactor < 1
@@ -817,4 +778,5 @@ assign initialcost =
 # Version 2.5.16 BETA * changed tracktype_penalty
 # Version 2.5.17 BETA * changed again cycleroute preferencing
 # Version 2.5.18 BETA * tweaked again cycleroute preferencing
+# Version 2.5.19 BETA * tweaked again cycleroute preferencing 
 # bend /comments
