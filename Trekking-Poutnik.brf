@@ -1,5 +1,5 @@
 # Poutnik's Trekking profile template for Trekking profile variants
-# Version 2.5.17 BETA * changed again cycleroute preferencing
+# Version 2.5.18 BETA * tweaked again cycleroute preferencing
 #
 # See also https://github.com/poutnikl/Brouter-profiles/wiki 
 # and https://github.com/poutnikl/Trekking-Poutnik
@@ -42,12 +42,13 @@ assign   considerTurnRestrictions = true  #v2.5.11
 
 #new in 2.5.12
 #reworked in 2.5.17
+#reworked in 2.5.18 - multiplicative
 assign    local_cr_coef = 0.4
-assign    icn_crp 0.0
-assign    ncn_crp 0.0
-assign    rcn_crp multiply local_cr_coef cycleroutes_pref
-assign    lcn_crp multiply local_cr_coef cycleroutes_pref
-assign    nor_crp cycleroutes_pref
+assign    icn_crp 1.0
+assign    ncn_crp 1.0
+assign    rcn_crp add 1.0 multiply local_cr_coef cycleroutes_pref
+assign    lcn_crp add 1.0 multiply local_cr_coef cycleroutes_pref
+assign    nor_crp add 1.0 cycleroutes_pref
 
 assign   uphillcostvalue        switch equal hills 1 70   switch equal hills 2 80
                                 switch equal hills 3 60   switch equal hills 4 150     0 
@@ -568,8 +569,9 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
   # )    
   
   assign cycleroute_tweak  
-         if ( equal cycleroutes_pref 0.0 )  then 0.0 else
-         if ( highway=cycleway )            then 0.0 else
+  #reworked in 2.5.18 - multiplicative
+         if ( equal cycleroutes_pref 0.0 )  then 1.0 else
+         if ( highway=cycleway )            then 1.0 else
          if islcn then lcn_crp else
          if isrcn then rcn_crp else
          if isncn then ncn_crp else
@@ -579,13 +581,13 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
   assign rawcostfactor2 (                                        # MTB_factor_for_road + (non)/cycleroute CF adjustment
     if greater rawcostfactor 9997 then rawcostfactor
     else  
-    add   rawcostfactor
-    add   cycleroute_tweak 
-    add   MTB_factor_for_road           # penalizes paved and promotes unpaved roads See *****) for more
-          smallpaved_factor_for_road    # penalizes mainroads and unpaved roads, promotes the middle
-    
-                                      
-          
+    #reworked in 2.5.18 - multiplicative
+    multiply   cycleroute_tweak 
+    ( 
+      add   rawcostfactor
+      add   MTB_factor_for_road           # penalizes paved and promotes unpaved roads See *****) for more
+            smallpaved_factor_for_road    # penalizes mainroads and unpaved roads, promotes the middle
+      )
     )  
             
   assign costfactor  # calculations may provide illegal costfactor < 1
@@ -814,4 +816,5 @@ assign initialcost =
 #                     + set noncycleroute highway=cycleway neutral wrt cycleroute_pref
 # Version 2.5.16 BETA * changed tracktype_penalty
 # Version 2.5.17 BETA * changed again cycleroute preferencing
+# Version 2.5.18 BETA * tweaked again cycleroute preferencing
 # bend /comments
