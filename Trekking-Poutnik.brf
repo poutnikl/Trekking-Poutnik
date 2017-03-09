@@ -1,5 +1,5 @@
 # Poutnik's Trekking profile template for Trekking profile variants
-# Version 2.5.19 BETA * tweaked again cycleroute preferencing 
+# Version 2.5.20 BETA + isbike conditional for mainroads.
 #
 # See also https://github.com/poutnikl/Brouter-profiles/wiki 
 # and https://github.com/poutnikl/Trekking-Poutnik
@@ -17,9 +17,9 @@ assign   cycleroutes_pref       0.2 # **) costfactor penalty for not being cycle
 assign   MTB_factor             0.0 # default 0.0, see https://github.com/poutnikl/Brouter-profiles/wiki/Trekking-MTB-Profiles---legend
 assign   smallpaved_factor      0.0 # default 0.0, see https://github.com/poutnikl/Brouter-profiles/wiki/MTB_factor-and-smallpaved_factor
 assign   avoid_unsafe           0 # 0 as default, gives penalty to road without bike friendly status.
-                                    
-assign   hills                  1 # 1=default,                         0=trekking profile default,                1=try to avoid steep hills >3.0%, 
-                                  # 2=velomobile-like avoiding slopes, 3= simulates ascend/length time equiv.     4=valley mode
+assign   hills                  1 # 1=default / 0=BRouter default/ 1=+ penalty for uphills >3.0%/ 2=velomobile-like avoiding slopes, 3= simulates ascend/length time equiv.     4=valley mode
+#v2.5.20
+assign   isbike_for_mainroads   true # default=true / if false then bike friendly tag hints for mainroads are ignored, keeping their high penalties.
 
 assign   consider_elevation     1 # 1 as default
 assign   consider_smoothness    1 # 1 as default
@@ -154,15 +154,18 @@ assign any_cn or any_cn_yes switch use_proposed_cn any_cn_proposed 0
 assign nodeaccessgranted or any_cycleroute any_cn
                    
 assign is_ldcr if (  equal cycleroutes_pref 0.0 )   then false else nodeaccessgranted
+
+assign istrack  highway=track|road|path|footway
+assign ismainroad highway=motorway|motorway_link|trunk|trunk_link|primary|primary_link|secondary|secondary_link|tertiary|tertiary_link
                                        
-assign isbike or bicycle=yes|permissive|designated nodeaccessgranted
+assign isbike and ( or ( not ismainroad ) isbike_for_mainroads )   ( or bicycle=yes|permissive|designated nodeaccessgranted )
+
+
 assign ispaved surface=paved|asphalt|concrete|paving_stones
 assign isunpaved not or surface= or ispaved or surface=fine_gravel surface=cobblestone
 
 assign probablyGood or ispaved  and isbike not isunpaved  #probably good surface - weather independent
 
-assign istrack  highway=track|road|path|footway
-assign ismainroad highway=motorway|motorway_link|trunk|trunk_link|primary|primary_link|secondary|secondary_link|tertiary|tertiary_link
 
 assign ismuddy and iswet
                and ( not surface=gravel|pebblestone )  # ***)
@@ -779,4 +782,5 @@ assign initialcost =
 # Version 2.5.17 BETA * changed again cycleroute preferencing
 # Version 2.5.18 BETA * tweaked again cycleroute preferencing
 # Version 2.5.19 BETA * tweaked again cycleroute preferencing 
+# Version 2.5.20 BETA + isbike conditional for mainroads.
 # bend /comments
