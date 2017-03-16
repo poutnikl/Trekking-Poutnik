@@ -1,5 +1,5 @@
 # Poutnik's Trekking profile template for Trekking profile variants
-# Version 2.5.20 BETA + isbike conditional for mainroads.
+# Version 2.6 ALFA + additive/maximizing costfactor components for all highway=*
 #
 # See also https://github.com/poutnikl/Brouter-profiles/wiki 
 # and https://github.com/poutnikl/Trekking-Poutnik
