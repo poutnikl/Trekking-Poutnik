@@ -1,5 +1,5 @@
 # Poutnik's Trekking profile template for Trekking profile variants
-# Version 2.6 ALFA + additive/maximizing costfactor components for all highway=*
+# Version 2.6.1 ALFA + additive/maximizing costfactor components for all highway=*
 #
 # See also https://github.com/poutnikl/Brouter-profiles/wiki 
 # and https://github.com/poutnikl/Trekking-Poutnik
@@ -109,7 +109,7 @@ assign   downhillCFshift   0.0 # prioritizing/penalizing of up/downhills, based 
 assign    pass1coefficient 1.8
 assign    pass2coefficient 0
 
-assign   unsafe_penalty       1.0 # 1 - was 2 in Trekking, but this may cause U-like safe routes
+assign   unsafe_penalty_value 1.0 # 1 - was 2 in Trekking, but this may cause U-like safe routes
 assign   cost_of_unknown      2.0 # 2 as default, cost of highway=
 
 assign   c_ford_initialcost_node = 500
@@ -412,8 +412,15 @@ else if surface=                    then if highway=path then 2.0 else 1.0
 else if surface=grass               then if highway=path then 2.5 else 1.5
 else if surface=ground|earth|unpaved|sand|dirt|mud
                                     then if highway=path then 3.5 else 2.0
+
                                     else 2.0
 # bend /trackpenalties
+
+# Penalty for unsafe roads. As wet fallback, it does not so strictly avoid unsafe
+assign unsafe_penalty
+    add if and avoid_unsafe not isbike then 
+      multiply unsafe_penalty_value  ( if iswet then  0.5 else 1.0 )  else 0  
+
 
 assign hascycleway = not
   and ( or cycleway= cycleway=no|none ) and ( or cycleway:left= cycleway:left=no ) ( or cycleway:right= cycleway:right=no )
@@ -466,7 +473,7 @@ assign nonpath_penalty = (
     )
 
   
-   
+  
    
 # bstart /costfactors
 assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation of costfactor, uphillcostfactor,downhillcostfactor
@@ -514,11 +521,7 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
    
 # Penalty for unsafe roads. As wet fallback, it does not so strictly avoid unsafe
 
-  add ( if ( and avoid_unsafe not isbike ) then ( multiply unsafe_penalty     ( if ( iswet ) then    0.5 else 1.0 ) ) 
-                                         else 0  )
-
-  
-  
+  add unsafe_penalty_value  
   add 
   ( if IsSlickySett then 0.8 else 0.0 )
   
