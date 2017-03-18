@@ -173,7 +173,7 @@ assign ismuddy and iswet
 assign IsSlickySett = and iswet surface=cobblestone|sett
 
 
-assign turncost       sub ( if  ismainroad  then 90    else if ispaved then 60   else 30 ) ( multiply 30 Hill_factor )
+assign turncost   if  ismainroad  then 90    else if ispaved then 60   else 30 
 #v2.5.10 decrease turncost for positive MTB factor, increase for negative one
 # Turn cost is based solely on estimation of road speediness and eventual time cost of turning, partially promoting tracks )
 
