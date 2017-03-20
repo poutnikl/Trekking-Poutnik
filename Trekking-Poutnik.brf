@@ -1,5 +1,6 @@
 # Poutnik's Trekking profile template for Trekking profile variants
-# Version 2.6.1 ALFA + additive/maximizing costfactor components for all highway=*
+# Version 2.6.2 * minor code reorganization, not_isbike_penalty for mainroads )
+#               - removed minor preference of mainroads for wet conditions.
 #
 # See also https://github.com/poutnikl/Brouter-profiles/wiki 
 # and https://github.com/poutnikl/Trekking-Poutnik
@@ -376,7 +377,7 @@ if tracktype=  then (
 
 
  
-assign surface_penalty (  #minor tweaks
+assign surface_penalty   #minor tweaks
 #if not istrack                                  then 0.0  v2.5.16
     if surface=asphalt|paved                   then 0.0
 else if surface=concrete|paving_stones          then 0.2
@@ -387,21 +388,32 @@ else if surface=ground|earth|unpaved|dirt       then 0.4
 else if surface=grass|sand                      then 1.0
 else if surface=gravel|pebblestone              then 1.2
                                                 else 0.3
-)
-                                           
-assign not_isbike_track_penalty
-if not istrack                     then 0.0  # this is track context / isbike for mainroads is addressed elsewhere.// 2.2.1 ALFA
-else if or ispaved isbike          then 0.0 
-else if and tracktype= surface=    then if highway=path then 4.0 else 1.0
-else if tracktype=                 then 3.0
-else if tracktype=grade1           then 0.2
-else if tracktype=grade2           then 0.6
-else if tracktype=grade3           then 1.2
-else if tracktype=grade4           then 2.0
-else if tracktype=grade5           then 3.0
-                                   else 3.0 
 
-assign wet_penalty
+                                           
+assign not_isbike_penalty (
+if not istrack                     then 
+
+     if isbike then 0.0
+     else 
+
+              if      highway=trunk|trunk_link          then 8.2  
+              else if highway=primary|primary_link      then 1.5  
+              else if highway=secondary|secondary_link  then 0.4
+              else                                           0.3
+else 
+
+    if      or ispaved isbike          then 0.0 
+    else if and tracktype= surface=    then if highway=path then 4.0 else 1.0
+    else if tracktype=                 then 3.0
+    else if tracktype=grade1           then 0.2
+    else if tracktype=grade2           then 0.6
+    else if tracktype=grade3           then 1.2
+    else if tracktype=grade4           then 2.0
+    else if tracktype=grade5           then 3.0
+                                       else 3.0 
+)
+
+assign wet_penalty  (
 if   not iswet                      then 0.0 
 else if not istrack                 then 0.0
 else if ispaved                     then 0.0
@@ -414,13 +426,14 @@ else if surface=ground|earth|unpaved|sand|dirt|mud
                                     then if highway=path then 3.5 else 2.0
 
                                     else 2.0
+)
 # bend /trackpenalties
 
 # Penalty for unsafe roads. As wet fallback, it does not so strictly avoid unsafe
-assign unsafe_penalty
-    add if and avoid_unsafe not isbike then 
-      multiply unsafe_penalty_value  ( if iswet then  0.5 else 1.0 )  else 0  
-
+assign unsafe_penalty  
+    if ( and avoid_unsafe not isbike ) 
+                then  multiply unsafe_penalty_value  ( if iswet then  0.5 else 1.0 )  
+                else 0  
 
 assign hascycleway = not
   and ( or cycleway= cycleway=no|none ) and ( or cycleway:left= cycleway:left=no ) ( or cycleway:right= cycleway:right=no )
@@ -514,22 +527,29 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
   switch    highway=residential|living_street         ( switch ismuddy 2.0 switch isunpaved 1.6 1.2 )
   switch    highway=service                           ( switch ismuddy 1.8 switch isunpaved 1.5 1.1 )
 
-  if istrack then ( add 1.0  max trackclass_penalty         max tracktype_penalty   max surface_penalty
-                             max not_isbike_track_penalty   max roughness_penalty   wet_penalty                     )
+  if istrack then ( 
+      add 1.0
+      max trackclass_penalty
+      max tracktype_penalty
+      max surface_penalty
+      max not_isbike_penalty
+      max roughness_penalty
+          wet_penalty
+      )
   
  else
    
 # Penalty for unsafe roads. As wet fallback, it does not so strictly avoid unsafe
 
-  add unsafe_penalty_value  
+  add unsafe_penalty 
   add 
   ( if IsSlickySett then 0.8 else 0.0 )
-  
-  switch highway=trunk|trunk_link          ( switch isbike switch iswet 1.5 1.8 switch iswet 5 10 )
-  switch highway=primary|primary_link      ( switch isbike switch iswet 1.2 1.5 switch iswet 2 3 )
-  switch highway=secondary|secondary_link  ( switch isbike switch iswet 1.1 1.2 switch iswet 1.4 1.6 )
-  switch highway=tertiary|tertiary_link    ( switch isbike switch iswet 1.0 1.1 switch iswet 1.2 1.4 )
-  switch highway=unclassified              ( switch isbike switch iswet 1.0 1.0 switch iswet 1.15 1.3 )
+  add not_isbike_penalty
+  switch highway=trunk|trunk_link          1.8
+  switch highway=primary|primary_link      1.5
+  switch highway=secondary|secondary_link  1.2
+  switch highway=tertiary|tertiary_link    1.1
+  switch highway=unclassified              1.0
   
  
   cost_of_unknown # above highway tags do not apply
@@ -787,4 +807,7 @@ assign initialcost =
 # Version 2.5.18 BETA * tweaked again cycleroute preferencing
 # Version 2.5.19 BETA * tweaked again cycleroute preferencing 
 # Version 2.5.20 BETA + isbike conditional for mainroads.
+# Version 2.6.1 ALFA + additive/maximizing costfactor components for all highway=*
+# Version 2.6.2 * minor code reorganization, not_isbike_penalty for mainroads )
+#               - removed minor preference of mainroads for wet conditions.
 # bend /comments
