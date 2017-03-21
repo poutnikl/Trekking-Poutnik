@@ -72,29 +72,17 @@ assign   validForBikes        1
 assign   Hill_factor            min 3 max -3 sub MTB_factor smallpaved_factor              
 assign   Road_factor            min 3 max -3 ( sub ( sub 0.0 MTB_factor ) smallpaved_factor )
 
-#assign   MTBminusSP_factor           sub MTB_factor smallpaved_factor
-#assign   positive_smallpaved_factor  or ( equal smallpaved_factor 0.0 ) ( greater smallpaved_factor 0.0 )
-
 assign   positive_smallpaved_factor  not lesser smallpaved_factor 0.0
 assign   abs_smallpaved_factor       multiply ( switch positive_smallpaved_factor 1.0 -1.0 ) smallpaved_factor 
 
 assign   MTB_hillcostfactor   multiply 0.3333 Hill_factor 
                   # It changes hillcosts to be 0.0 at Hill_factor = 3.0 and twice at -3.0
-                  # if Hill_factor = 1  , then downhillcost decreases e.g. from 60 to 40
-                  # if Hill_factor = -1 , then downhillcost increases e.g. from 60 to 80
+                  # Hill_factor 1..-1 leads hillcost to decrease e.g. from 60 to 40 / increase from 60 to 80
                   
-                  
-assign   downhillcost if ( consider_elevation  )  then 
-        ( multiply ( sub 1.0 MTB_hillcostfactor  ) downhillcostvalue ) else 0
-
-assign   uphillcost   if ( consider_elevation  )  then
-        ( multiply ( sub 1.0 MTB_hillcostfactor  ) uphillcostvalue ) else 0
-
-assign   uphillcutoff    if ( consider_elevation )   then   
-        (  multiply ( max 0.0 min 1.0 add 1.0 MTB_hillcostfactor  ) uphillcutoffvalue )   else 1.5
-        
-assign   downhillcutoff  if ( consider_elevation ) then  
-        (  multiply ( max 0.0 min 1.0 add 1.0 MTB_hillcostfactor  ) downhillcutoffvalue ) else 1.5 
+assign   downhillcost if ( consider_elevation  )  then  ( multiply ( sub 1.0 MTB_hillcostfactor  ) downhillcostvalue ) else 0
+assign   uphillcost   if ( consider_elevation  )  then  ( multiply ( sub 1.0 MTB_hillcostfactor  ) uphillcostvalue ) else 0
+assign   uphillcutoff    if ( consider_elevation ) then (  multiply ( max 0.0 min 1.0 add 1.0 MTB_hillcostfactor  ) uphillcutoffvalue )   else 1.5
+assign   downhillcutoff  if ( consider_elevation ) then (  multiply ( max 0.0 min 1.0 add 1.0 MTB_hillcostfactor  ) downhillcutoffvalue ) else 1.5 
 
 assign   elevationpenaltybuffer if ( equal hills 4 ) then 10 else 5   # 5 is trekking default
 assign   elevationmaxbuffer     if ( equal hills 4 ) then 20 else 10  # 10 is trekking default
