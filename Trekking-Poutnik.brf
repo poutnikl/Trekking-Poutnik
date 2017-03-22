@@ -159,9 +159,8 @@ assign ismuddy and iswet
                    ( or isunpaved ( and surface= and highway=track|path not tracktype=grade1 )  )
                    
 
-#v2.5.10 decrease turncost for positive MTB factor, increase for negative one
+assign turncost  if  ismainroad  then 90    else if ispaved then 60   else 30 
 # Turn cost is based solely on estimation of road speediness and eventual time cost of turning, partially promoting tracks )
-assign turncost       sub ( if  ismainroad  then 90    else if ispaved then 60   else 30 ) ( multiply 30 Hill_factor )
 
 # bend /wayvariables
 
@@ -216,7 +215,7 @@ assign footaccess =
 assign accesspenalty =
        if bikeaccess then 0
        else if footaccess then 
-         if StrictNOBicycleaccess then 10000 else 4 
+        ( if StrictNOBicycleaccess then 10000 else 4 )
        else 10000
 
 # bend /waccess
@@ -238,12 +237,12 @@ assign badoneway =
 
 assign onewaypenalty = 
        if ( badoneway ) then
-        if ( cycleway=opposite|opposite_lane|opposite_track ) then 0
+       ( if ( cycleway=opposite|opposite_lane|opposite_track ) then 0
          else if ( oneway:bicycle=no                         ) then 0
          else if ( highway=primary|primary_link              ) then 50
          else if ( highway=secondary|secondary_link          ) then 30
          else if ( highway=tertiary|tertiary_link            ) then 20
-         else 4.0   
+         else 4.0   )
        else 0.0   
 
 # bend /onewaypen
@@ -376,7 +375,7 @@ if tracktype=  then (
 
 
  
-assign surface_penalty   #minor tweaks
+assign surface_penalty (  #minor tweaks
 #if not istrack                                  then 0.0  v2.5.16
     if surface=asphalt|paved                   then 0.0
 else if surface=concrete|paving_stones          then 0.2
@@ -387,6 +386,7 @@ else if surface=ground|earth|unpaved|dirt       then 0.4
 else if surface=grass|sand                      then 1.0
 else if surface=gravel|pebblestone              then 1.2
                                                 else 0.3
+)
 
                                            
 assign not_isbike_penalty (
