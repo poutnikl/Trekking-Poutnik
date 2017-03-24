@@ -276,7 +276,8 @@ if mtb:scale=3       then 15.0 else
 if mtb:scale=4|5|6   then 9000
                      else 0.0
 
-assign roughness_penalty max smoothness_penalty mtb_scale_penalty    
+assign roughness_penalty max smoothness_penalty max mtb_scale_penalty  ( if ford=yes then ford_costfactor else 0 ) 
+    
 # bend /roughness_penalty
 
 # bstart /MTB_SP_tweaks
@@ -341,20 +342,29 @@ assign smallpaved_factor_for_road
 
 assign highwayclass_basefactor  (
   
-  if ismainroad then (
+if ismainroad then (
   switch highway=trunk|trunk_link          1.8
   switch highway=primary|primary_link      1.5
   switch highway=secondary|secondary_link  1.2
   switch highway=tertiary|tertiary_link    1.1
   1.0
   )
-else if not istrack         then 1.0
+else if istrack         then (
 
-else if highway=track       then 1.0
+if      highway=track       then 1.0
 else if highway=path        then 1.5
-else if highway=road        then 1.0
 else if highway=footway     then ( if and footway=sidewalk not isbike then 5.0 else 1.5 )
-                            else 1.0
+else    1.0  # highway=road 
+
+) else (
+
+  switch    highway=pedestrian 2.0
+  switch    highway=bridleway  3.0
+  switch    highway=cycleway 1.0
+  switch    highway=residential|living_street   1.2
+  switch    highway=service 1.1   
+  cost_of_unknown 
+)
 )
 
 assign tracktype_penalty 
@@ -365,10 +375,7 @@ if tracktype=  then (
     if      tracktype=grade1    then 0.0    else if tracktype=grade2 then 0.3
     else if tracktype=grade3    then 0.6    else if tracktype=grade4 then 1.0
     else if tracktype=grade5    then 1.5    else 0.2
-
 )
-
-
  
 assign surface_penalty (  #minor tweaks
 #if not istrack                                  then 0.0  v2.5.16
@@ -376,7 +383,7 @@ assign surface_penalty (  #minor tweaks
 else if surface=concrete|paving_stones          then 0.2
 else if surface=cobblestone|sett                then 0.3
 else if surface=compacted|fine_gravel           then 0.3
-else if surface=                                then 0.2
+else if or surface= surface=unknown   then switch istrack 0.2 0.0
 else if surface=ground|earth|unpaved|dirt       then 0.4
 else if surface=grass|sand                      then 1.0
 else if surface=gravel|pebblestone              then 1.2
@@ -386,13 +393,14 @@ else if surface=gravel|pebblestone              then 1.2
                                            
 assign not_isbike_penalty (
 if isbike then 0.0 
-else if ismainroad then 
+else if ismainroad then (
    
-              if      highway=trunk|trunk_link          then 8.2  
-              else if highway=primary|primary_link      then 1.5  
-              else if highway=secondary|secondary_link  then 0.4
-              else                                           0.3
-else if  ispaved                       then 0.0 
+    if      highway=trunk|trunk_link          then 8.2  
+    else if highway=primary|primary_link      then 1.5  
+    else if highway=secondary|secondary_link  then 0.4
+    else                                           0.3
+) else if istrack then ( 
+    if  ispaved                       then 0.0 
     else if and tracktype= surface=    then if highway=path then 4.0 else 1.0
     else if tracktype=                 then 3.0
     else if tracktype=grade1           then 0.2
@@ -401,12 +409,21 @@ else if  ispaved                       then 0.0
     else if tracktype=grade4           then 2.0
     else if tracktype=grade5           then 3.0
                                        else 3.0 
+) else (
+
+    switch    highway=pedestrian 2.0
+    switch    highway=bridleway  2.0
+    switch    highway=cycleway   0.0
+    switch    highway=residential|living_street 0.0
+    switch    highway=service 0.0
+    0.0
+)
 )
 
 assign wet_penalty  (
 if   not iswet                      then 0.0
 else if surface=cobblestone|sett    then 1.0 
-else if not istrack                 then 0.0
+# else if not istrack                 then 0.0
 else if ispaved                     then 0.0
 else if surface=compacted           then 0.6
 else if surface=fine_gravel         then 0.8
@@ -510,36 +527,16 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
   
   add nonpath_penalty
 
-  add ( if ford=yes then ford_costfactor else 0 ) 
- 
-  switch    highway=pedestrian                        switch ismuddy 5 3
-  switch    highway=bridleway                         switch ismuddy 8 5
-  switch    highway=cycleway                          ( switch ismuddy 1.8 switch isunpaved 1.5 1.0 )
-  switch    highway=residential|living_street         ( switch ismuddy 2.0 switch isunpaved 1.6 1.2 )
-  switch    highway=service                           ( switch ismuddy 1.8 switch isunpaved 1.5 1.1 )
+  add highwayclass_basefactor
+  max not_isbike_penalty
+  max tracktype_penalty
+  max surface_penalty
+  max roughness_penalty
+  max wet_penalty
+      if ismainroad then unsafe_penalty else 0.0
+       
 
-  if istrack then ( 
-      add highwayclass_basefactor
-      max tracktype_penalty
-      max surface_penalty
-      max not_isbike_penalty
-      max roughness_penalty
-          wet_penalty
-      )
-  
- else
-   
-# Penalty for unsafe roads. As wet fallback, it does not so strictly avoid unsafe
-  (
-  if ismainroad then
-     add highwayclass_basefactor
-     add not_isbike_penalty
-     add unsafe_penalty 
-         max surface_penalty  roughness_penalty
-  else
-    cost_of_unknown # above highway tags do not apply
-  )
-)  
+ )  
   
   assign cycleroute_tweak  
   #reworked in 2.5.18 - multiplicative
