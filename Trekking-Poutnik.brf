@@ -1,6 +1,5 @@
 # Poutnik's Trekking profile template for Trekking profile variants
-# Version 2.6.2 * minor code reorganization, not_isbike_penalty for mainroads )
-#               - removed minor preference of mainroads for wet conditions.
+# Version 2.6.* new max cost system
 #
 # See also https://github.com/poutnikl/Brouter-profiles/wiki 
 # and https://github.com/poutnikl/Trekking-Poutnik
@@ -142,7 +141,7 @@ assign nodeaccessgranted or any_cycleroute any_cn
 assign is_ldcr if (  equal cycleroutes_pref 0.0 )   then false else nodeaccessgranted
 
 assign istrack  highway=track|road|path|footway
-assign ismainroad highway=motorway|motorway_link|trunk|trunk_link|primary|primary_link|secondary|secondary_link|tertiary|tertiary_link
+assign ismainroad highway=motorway|motorway_link|trunk|trunk_link|primary|primary_link|secondary|secondary_link|tertiary|tertiary_link|unclassified
                                        
 assign isbike_candidate or bicycle=yes|permissive|designated nodeaccessgranted
 assign isbike and ( or ( not ismainroad ) isbike_for_mainroads )  isbike_candidate
@@ -398,7 +397,8 @@ else if ismainroad then (
     if      highway=trunk|trunk_link          then 8.2  
     else if highway=primary|primary_link      then 1.5  
     else if highway=secondary|secondary_link  then 0.4
-    else                                           0.3
+    else 0.3 # tertiary|tertiary_link|unclassified
+
 ) else if istrack then ( 
     if  ispaved                       then 0.0 
     else if and tracktype= surface=    then if highway=path then 4.0 else 1.0
