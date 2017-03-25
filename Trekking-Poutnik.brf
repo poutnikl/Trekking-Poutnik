@@ -248,6 +248,8 @@ assign onewaypenalty = (
 
 # bend /onewaypen
 
+# bstart /roadmaxpenalties
+
 # bstart /roughness_penalty
 assign smoothness_penalty  
 # http://wiki.openstreetmap.org/wiki/Key:smoothness
@@ -278,6 +280,22 @@ if mtb:scale=4|5|6   then 9000
                      else 0.0
 
 assign roughness_penalty max smoothness_penalty max mtb_scale_penalty  ( if ford=yes then ford_costfactor else 0 ) 
+
+assign nonpath_penalty = (
+    if      ( equal path_preference 0.0 )   then 0.0                # nonpath_penalty inactive
+    else if not istrack                     then path_preference    #istrack = highway=track/path/road/footway
+    else if ispaved                         then ( multiply path_preference 0.5 )
+    else if or  ( and not isunpaved 
+                      not highway=path )
+                ( tracktype=grade1|grade2 ) then ( multiply path_preference 0.25 )
+    else if not ( and isunpaved
+                  and highway=path
+                  and tracktype=grade1|grade2
+                  not surface=gravel|cobblestone|pebblestone )  
+                                            then                    ( multiply path_preference 0.125 )
+                                            else                    0.0
+  
+)
     
 # bend /roughness_penalty
 
@@ -339,7 +357,7 @@ assign smallpaved_factor_for_road
                  ( if  positive_smallpaved_factor then abs_univ_factor  else  ( sub 1.0 abs_univ_factor )  )
 # bend /MTB_SP_tweaks                                             
                                              
-# bstart /roadmaxpenalties
+# bstart /HWclass_bfactor_components
 
 assign highwayclass_basefactor  (
   
@@ -436,8 +454,13 @@ else if surface=ground|earth|unpaved|sand|dirt|mud
 
                                     else 2.0
 )
+
+    
+# bend /HWclass_bfactor_components
+    
 # bend /roadmaxpenalties
 
+# bstart /trafficpenalties
 # Penalty for unsafe roads. As wet fallback, it does not so strictly avoid unsafe
 assign unsafe_penalty  
     if ( and avoid_unsafe not isbike ) 
@@ -478,24 +501,7 @@ assign trafficpenalty =
   if hascycleway then min 0.3 trafficpenalty0
   else trafficpenalty0
   
-assign nonpath_penalty = (
-    if      ( equal path_preference 0.0 )   then 0.0                # nonpath_penalty inactive
-    else if not istrack                     then path_preference    #istrack = highway=track/path/road/footway
-    else if ispaved                         then ( multiply path_preference 0.5 )
-    else if or  ( and not isunpaved 
-                      not highway=path )
-                ( tracktype=grade1|grade2 ) then ( multiply path_preference 0.25 )
-    else if not ( and isunpaved
-                  and highway=path
-                  and tracktype=grade1|grade2
-                  not surface=gravel|cobblestone|pebblestone )  
-                                            then                    ( multiply path_preference 0.125 )
-                                            else                    0.0
-  
-    )
-
-  
-  
+# bend /trafficpenalties
    
 # bstart /costfactors
 
@@ -540,10 +546,8 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
 
  )  
   
-  assign cycleroute_tweak  
-  #reworked in 2.5.18 - multiplicative
-  #reworked in 2.5.19 - back addititive + local route progressive for cycroute pref <=1
-
+  assign cycleroute_tweak (
+  
          if ( equal cycleroutes_pref 0.0 )  then 0.0 else
          
          if islcn then lcn_crp else
@@ -551,6 +555,7 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
          if isncn then ncn_crp else
          if isicn then icn_crp
                   else nor_crp
+  ) 
   
   assign rawcostfactor2 (                                        # MTB_factor_for_road + (non)/cycleroute CF adjustment
     if greater rawcostfactor 9997 then rawcostfactor
@@ -562,15 +567,14 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
           smallpaved_factor_for_road    # penalizes mainroads and unpaved roads, promotes the middle
     )  
             
-  assign costfactor  # calculations may provide illegal costfactor < 1
+  assign costfactor (
+    # calculations may provide illegal costfactor < 1
     if greater rawcostfactor2 9997 then rawcostfactor2 else
     add
            max 1.0 rawcostfactor2 
            ( max onewaypenalty max accesspenalty  switch allow_traffic_penalty trafficpenalty 0 ) 
            # v2.5.5  was moved from rawcostfactor to avoid being affected by MTB_factor and smallpaved_factor
-          
- 
-  
+  )        
     
   assign uphillcostfactor = (
     if greater rawcostfactor2 9997 then rawcostfactor2 else
@@ -669,7 +673,9 @@ assign classifiermask add          isbadoneway
                           multiply isgoodforcars 16
                           
 # bend /priorityclassifiers                          
+
 # bend /way                          
+
 # bstart /node
 ---context:node  # following code refers to node tags
 
@@ -794,4 +800,5 @@ assign initialcost =
 # Version 2.6.1 ALFA + additive/maximizing costfactor components for all highway=*
 # Version 2.6.2 * minor code reorganization, not_isbike_penalty for mainroads )
 #               - removed minor preference of mainroads for wet conditions.
+# Version 2.6   + Implemented universal max penalty costfactor system
 # bend /comments
