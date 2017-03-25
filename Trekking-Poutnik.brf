@@ -510,24 +510,11 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
   
   # v2.5.5>  add ( max onewaypenalty max accesspenalty  switch allow_traffic_penalty trafficpenalty 0 ) 
   # was moved  to final (up/down/costfactor calculation to avoid being affected by costfactor tweaks
-  
-  
+    
   switch and highway= not route=ferry  10000 #only highways unless ferry
   switch highway=motorway|motorway_link|proposed|abandoned  10000
   
-  # all other exclusions below (access, steps, ferries,..)
-  # should not be deleted by the decoder, to be available
-  # in voice-hint-processing
-  
-# There are effectively 3 classes of forbidden ways now.
-# Class 1 with CF 10000,  totally ignored by decoder and routing as was
-#                         initially before voice hints came.
-# Class 2 with CF 9999,              as above, but noticed by voice hint generator.
-# Class 3 with CF >> 1 but < 9999,   not ignored, but due extremely high cost
-#                                    used effectively as a last resort only.
-  
-  
-  
+  # all other exclusions below (access, steps, ferries,..) should not be deleted by the decoder, to be available in voice-hint-processing
   min 9999 
   
   switch    highway=steps  switch allow_steps     40 10000
@@ -540,8 +527,7 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
   max not_isbike_penalty
   max penalty4max
       if ismainroad then unsafe_penalty else 0.0
-       
-
+  
  )  
   
   assign cycleroute_tweak (
