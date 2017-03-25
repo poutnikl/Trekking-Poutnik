@@ -1,8 +1,8 @@
 # Poutnik's Trekking profile template for Trekking profile variants
 # Version 2.6.* new max cost system
 #
-# See also https://github.com/poutnikl/Brouter-profiles/wiki 
-# and https://github.com/poutnikl/Trekking-Poutnik
+# *)  = See also https://github.com/poutnikl/Brouter-profiles/wiki 
+# **) = See also https://github.com/poutnikl/Trekking-Poutnik/wiki
 #
 # LEGEND
 #
@@ -13,10 +13,10 @@
 ---context:global
 assign   iswet                  0 # 0 as default, *) flag for weather conditions
 assign   turnInstructionMode  = 1 # 0=none, 1=auto-choose, 2=locus-style, 3=osmand-style
-assign   cycleroutes_pref       0.2 # **) costfactor penalty for not being cycleroute
-assign   MTB_factor             0.0 # default 0.0, see https://github.com/poutnikl/Brouter-profiles/wiki/Trekking-MTB-Profiles---legend
-assign   smallpaved_factor      0.0 # default 0.0, see https://github.com/poutnikl/Brouter-profiles/wiki/MTB_factor-and-smallpaved_factor
-assign   avoid_unsafe           0 # 0 as default, gives penalty to road without bike friendly status.
+assign   cycleroutes_pref       0.2 # *) costfactor penalty for not being cycleroute
+assign   MTB_factor             0.0 # default 0.0, *)
+assign   smallpaved_factor      0.0 # default 0.0, *)
+assign   avoid_unsafe           0 # 0 as default, gives penalty to mainroad without bike friendly status.
 assign   hills                  1 # 1=default / 0=BRouter default/ 1=+ penalty for uphills >3.0%/ 2=velomobile-like avoiding slopes, 3= simulates ascend/length time equiv.     4=valley mode
 
 assign   isbike_for_mainroads   true # default=true / if false then bike friendly tag hints for mainroads are ignored, keeping their high penalties. v2.5.20
@@ -348,7 +348,7 @@ assign univ_factor_coef =
 
 assign MTB_factor_for_road    if  ( equal MTB_factor 0.0 ) then 0.0 else multiply MTB_factor  univ_factor_coef
    
-assign abs_univ_factor =      if ( greater 0.0 univ_factor_coef ) then ( multiply -1.0 univ_factor_coef ) else univ_factor_coef   
+assign abs_univ_factor =      multiply ( if ( greater 0.0 univ_factor_coef ) then -1.0 else 1.0  )  univ_factor_coef   
     
 assign smallpaved_factor_for_road   
 
@@ -454,7 +454,6 @@ else if surface=ground|earth|unpaved|sand|dirt|mud
 
                                     else 2.0
 )
-
     
 # bend /HWclass_bfactor_components
     
@@ -505,6 +504,8 @@ assign trafficpenalty =
    
 # bstart /costfactors
 
+assign penalty4max = max roughness_penalty max tracktype_penalty max surface_penalty wet_penalty
+
 assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation of costfactor, uphillcostfactor,downhillcostfactor
   
   # v2.5.5>  add ( max onewaypenalty max accesspenalty  switch allow_traffic_penalty trafficpenalty 0 ) 
@@ -537,10 +538,7 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
 
   add highwayclass_basefactor
   max not_isbike_penalty
-  max tracktype_penalty
-  max surface_penalty
-  max roughness_penalty
-  max wet_penalty
+  max penalty4max
       if ismainroad then unsafe_penalty else 0.0
        
 
@@ -566,22 +564,21 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
     add   MTB_factor_for_road           # penalizes paved and promotes unpaved roads See *****) for more
           smallpaved_factor_for_road    # penalizes mainroads and unpaved roads, promotes the middle
     )  
-            
+    
+  assign access-traffic-penalty max onewaypenalty max accesspenalty  switch allow_traffic_penalty trafficpenalty 0
+  
   assign costfactor (
     # calculations may provide illegal costfactor < 1
     if greater rawcostfactor2 9997 then rawcostfactor2 else
     add
-           max 1.0 rawcostfactor2 
-           ( max onewaypenalty max accesspenalty  switch allow_traffic_penalty trafficpenalty 0 ) 
-           # v2.5.5  was moved from rawcostfactor to avoid being affected by MTB_factor and smallpaved_factor
+           max 1.0 rawcostfactor2
+           access-traffic-penalty  # v2.5.5  was moved from rawcostfactor to avoid being affected by MTB_factor and smallpaved_factor
   )        
     
   assign uphillcostfactor = (
     if greater rawcostfactor2 9997 then rawcostfactor2 else
-    add ( max onewaypenalty max accesspenalty  switch allow_traffic_penalty trafficpenalty 0 ) 
-           # v2.5.5  was moved from rawcostfactor to avoid being affected by MTB_factor and smallpaved_factor
+    add access-traffic-penalty   # v2.5.5  was moved from rawcostfactor to avoid being affected by MTB_factor and smallpaved_factor
     max 1.0
-              
     if ( equal hills 4 ) then ( multiply rawcostfactor2 valley_nonflat_multiplier )
     else
     add uphillCFshift
@@ -597,11 +594,8 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
 
   assign downhillcostfactor =  (
     if greater rawcostfactor2 9997 then rawcostfactor2 else
-    add ( max onewaypenalty max accesspenalty  switch allow_traffic_penalty trafficpenalty 0 ) 
-           # v2.5.5  was moved from rawcostfactor to avoid being affected by MTB_factor and smallpaved_factor
-    
+    add access-traffic-penalty  # v2.5.5  was moved from rawcostfactor to avoid being affected by MTB_factor and smallpaved_factor
     max 1.0
-       
     if ( equal hills 4 ) then ( multiply rawcostfactor2 valley_nonflat_multiplier )
     else
     add downhillCFshift
