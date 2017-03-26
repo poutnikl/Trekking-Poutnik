@@ -193,7 +193,7 @@ else if ( highway=residential|living_street|service   )     then 30
                                                             else 30
 # bend /initialcost                      
 
-# bstart /waccess
+# bstart /wayaccess
 
 assign defaultaccess =
        if access= then not motorroad=yes
@@ -217,10 +217,6 @@ assign accesspenalty =
         ( if StrictNOBicycleaccess then 10000 else 4 )
        else 10000
 
-# bend /waccess
-
-# bstart /onewaypen
-
 # handle one-ways. On primary roads, wrong-oneways should be close to forbidden
 # while on other ways we just add 4 to the costfactor
 # making it at least 5, as you are allowed to push your bike.
@@ -231,22 +227,19 @@ assign badoneway =
          else if oneway= then junction=roundabout 
          else oneway=yes|true|1
        else oneway=-1
-       
-       
 
-assign onewaypenalty = (
-       if ( badoneway ) then (
+assign onewaypenalty = 
+       if ( badoneway ) then 
          if cycleway=opposite|opposite_lane|opposite_track  then 0
          else if oneway:bicycle=no                          then 0
          else if highway=primary|primary_link               then 50
          else if highway=secondary|secondary_link           then 30
          else if highway=tertiary|tertiary_link             then 20
          else 4.0   
-         )
+         
        else 0.0   
-)
 
-# bend /onewaypen
+# bend /wayaccess
 
 # bstart /roadmaxpenalties
 
