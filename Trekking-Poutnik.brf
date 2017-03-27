@@ -121,6 +121,8 @@ assign   ford_costfactor =       if ( equal ford_handling_coef 10000000 ) then 9
                                  if ( equal ford_handling_coef 0.0 ) then 0.0 else
                                  multiply c_ford_costfactor ford_handling_coef 
 
+assign originalisbike = false
+
 # bend /global
 # bstart /way
 ---context:way   # following code refers to way-tags
@@ -142,8 +144,10 @@ assign is_ldcr if (  equal cycleroutes_pref 0.0 )   then false else nodeaccessgr
 
 assign istrack  highway=track|road|path|footway
 assign ismainroad highway=motorway|motorway_link|trunk|trunk_link|primary|primary_link|secondary|secondary_link|tertiary|tertiary_link|unclassified
-                                       
-assign isbike_candidate or bicycle=yes|permissive|designated nodeaccessgranted
+assign isotherroad = and not istrack not ismainroad
+
+#2.6.* imserted originalisbike option                                      
+assign isbike_candidate or bicycle=yes|permissive|designated if originalisbike then lcn=yes else nodeaccessgranted
 assign isbike and ( or ( not ismainroad ) isbike_for_mainroads )  isbike_candidate
 
 
