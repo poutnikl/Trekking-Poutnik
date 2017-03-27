@@ -379,6 +379,30 @@ else    1.0  # highway=road
 )
 )
 
+assign tracktype_penalty 
+#small update in 2.5.16 
+if tracktype=  then ( 
+    if istrack then 0.2 else 0.0 
+) else ( 
+    if      tracktype=grade1    then 0.0    else if tracktype=grade2 then 0.4
+    else if tracktype=grade3    then 0.75    else if tracktype=grade4 then 1.0
+    else if tracktype=grade5    then 1.2    else 0.2
+)
+ 
+assign surface_penalty (  #minor tweaks
+#if not istrack                                  then 0.0  v2.5.16
+    if surface=asphalt|paved                   then 0.0
+else if surface=concrete|paving_stones          then 0.2
+else if surface=cobblestone|sett                then 0.3
+else if surface=compacted|fine_gravel           then 0.3
+else if or surface= surface=unknown   then switch istrack 0.2 0.0
+else if surface=ground|earth|unpaved|dirt       then 0.4
+else if surface=grass|sand                      then 1.0
+else if surface=gravel|pebblestone              then 1.2
+                                                else 0.3
+)
+
+                                           
 assign not_isbike_penalty (
 if isbike then 0.0 
 else if ismainroad then (
@@ -408,33 +432,7 @@ else if ismainroad then (
     switch    highway=service 0.0
     0.0
 )
-)
-
-assign tracktype_penalty 
-#small update in 2.5.16 
-if tracktype=  then ( 
-    if istrack then 0.2 else 0.0 
-) else ( 
-    if      tracktype=grade1    then 0.0    else if tracktype=grade2 then 0.4
-    else if tracktype=grade3    then 0.75    else if tracktype=grade4 then 1.0
-    else if tracktype=grade5    then 1.2    else 0.2
-)
- 
-assign surface_penalty (  #minor tweaks
-#if not istrack                                  then 0.0  v2.5.16
-    if surface=asphalt|paved                   then 0.0
-else if surface=concrete|paving_stones          then 0.2
-else if surface=cobblestone|sett                then 0.3
-else if surface=compacted|fine_gravel           then 0.3
-else if or surface= surface=unknown   then switch istrack 0.2 0.0
-else if surface=ground|earth|unpaved|dirt       then 0.4
-else if surface=grass|sand                      then 1.0
-else if surface=gravel|pebblestone              then 1.2
-                                                else 0.3
-)
-
-                                         
-
+)                                         
 
 assign wet_penalty  (
 if   not iswet                      then 0.0
