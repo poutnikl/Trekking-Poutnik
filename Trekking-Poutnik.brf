@@ -282,15 +282,11 @@ assign nonpath_penalty = (
     if      ( equal path_preference 0.0 )   then 0.0                # nonpath_penalty inactive
     else if not istrack                     then path_preference    #istrack = highway=track/path/road/footway
     else if ispaved                         then ( multiply path_preference 0.5 )
-    else if or  ( and not isunpaved 
-                      not highway=path )
-                ( tracktype=grade1|grade2 ) then ( multiply path_preference 0.25 )
-    else if not ( and isunpaved
-                  and highway=path
-                  and tracktype=grade1|grade2
-                  not surface=gravel|cobblestone|pebblestone )  
-                                            then                    ( multiply path_preference 0.125 )
-                                            else                    0.0
+    else if or  ( and not isunpaved  not highway=path )  ( tracktype=grade1|grade2 )
+                                            then ( multiply path_preference 0.25 )
+    else if not ( and isunpaved and highway=path  and tracktype=grade1|grade2   not surface=gravel|cobblestone|pebblestone )  
+                                            then  ( multiply path_preference 0.125 )
+    else 0.0
   
 )
     
@@ -367,10 +363,10 @@ if ismainroad then (
   )
 else if istrack         then (
 
-if      highway=track       then 1.0
-else if highway=path        then 1.5
-else if highway=footway     then 1.5
-else    1.0  # highway=road 
+  switch   highway=track    1.0
+  switch   highway=path     1.5
+  switch   highway=footway  1.5
+           1.0  # highway=road 
 
 ) else (
 
@@ -379,7 +375,7 @@ else    1.0  # highway=road
   switch    highway=cycleway 1.0
   switch    highway=residential|living_street   1.2
   switch    highway=service 1.1   
-  cost_of_unknown 
+            cost_of_unknown 
 )
 )
 
