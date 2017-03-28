@@ -370,9 +370,8 @@ assign tracktype_penalty
 if tracktype=  then ( 
     if istrack then 0.2 else 0.0 
 ) else ( 
-    if      tracktype=grade1    then 0.0    else if tracktype=grade2 then 0.4
-    else if tracktype=grade3    then 0.75    else if tracktype=grade4 then 1.0
-    else if tracktype=grade5    then 1.2    else 0.2
+    switch tracktype=grade1 0.0 switch tracktype=grade2 0.4 switch tracktype=grade3 0.75
+    switch tracktype=grade4 1.0 switch tracktype=grade5 1.2 0.2
 )
  
 assign surface_penalty (  #minor tweaks
