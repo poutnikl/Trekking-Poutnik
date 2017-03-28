@@ -353,30 +353,16 @@ assign smallpaved_factor_for_road
 # bstart /HWclass_bfactor_components
 
 assign highwayclass_basefactor  (
-  
-if ismainroad then (
-  switch highway=trunk|trunk_link          1.8
-  switch highway=primary|primary_link      1.5
-  switch highway=secondary|secondary_link  1.2
-  switch highway=tertiary|tertiary_link    1.1
-  1.0
+    if ismainroad then (
+        switch highway=trunk|trunk_link          1.8  switch highway=primary|primary_link      1.5
+        switch highway=secondary|secondary_link  1.2  switch highway=tertiary|tertiary_link    1.1   1.0
+    ) else if istrack  then ( 
+        switch highway=track 1.0 switch highway=path 1.5 switch highway=footway  1.5  1.0  # highway=road 
+    ) else (
+        switch highway=pedestrian 2.0 switch highway=bridleway 3.0
+        switch highway=cycleway   1.0 switch highway=residential|living_street   1.2
+        switch highway=service    1.1 cost_of_unknown 
   )
-else if istrack         then (
-
-  switch   highway=track    1.0
-  switch   highway=path     1.5
-  switch   highway=footway  1.5
-           1.0  # highway=road 
-
-) else (
-
-  switch    highway=pedestrian 2.0
-  switch    highway=bridleway  3.0
-  switch    highway=cycleway 1.0
-  switch    highway=residential|living_street   1.2
-  switch    highway=service 1.1   
-            cost_of_unknown 
-)
 )
 
 assign tracktype_penalty 
@@ -406,31 +392,18 @@ else if surface=gravel|pebblestone              then 1.2
 assign not_isbike_penalty (
 if isbike then 0.0 
 else if ismainroad then (
-   
-    if      highway=trunk|trunk_link          then 8.2  
-    else if highway=primary|primary_link      then 1.5  
-    else if highway=secondary|secondary_link  then 0.4
-    else 0.3 # tertiary|tertiary_link|unclassified
-
+    switch highway=trunk|trunk_link          8.2  switch highway=primary|primary_link      1.5  
+    switch highway=secondary|secondary_link  0.4  0.3 # tertiary|tertiary_link|unclassified
 ) else if istrack then ( 
-    if highway=footway                 then 3.5
-    else if or ispaved tracktype=grade1 then 0.0 
-    else if and tracktype= not isunpaved  then if highway=path then 3.5 else 1.0
-    else if tracktype=                 then 3.0
-    else if tracktype=grade1           then 0.2
-    else if tracktype=grade2           then 0.6
-    else if tracktype=grade3           then 1.2
-    else if tracktype=grade4           then 2.0
-    else if tracktype=grade5           then 3.0
-                                       else 3.0 
+    switch highway=footway            3.5   switch or ispaved tracktype=grade1 0.0 
+    switch and tracktype= not isunpaved  ( switch highway=path 3.5 1.0 )
+    switch tracktype=                 3.0   switch tracktype=grade1           0.2
+    switch tracktype=grade2           0.6   switch tracktype=grade3           1.2
+    switch tracktype=grade4           2.0   switch tracktype=grade5           3.0        3.0 
 ) else (
-
-    switch    highway=pedestrian 2.0
-    switch    highway=bridleway  2.0
-    switch    highway=cycleway   0.0
-    switch    highway=residential|living_street 0.0
-    switch    highway=service 0.0
-    0.0
+    switch    highway=pedestrian 2.0   switch    highway=bridleway  2.0
+    switch    highway=cycleway   0.0   switch    highway=residential|living_street 0.0
+    switch    highway=service    0.0   0.0
 )
 )                                         
 
