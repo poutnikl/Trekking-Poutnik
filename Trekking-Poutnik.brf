@@ -496,78 +496,38 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
   
  )  
   
-  assign cycleroute_tweak (
+  assign cycleroute_tweak 
+         if ( equal cycleroutes_pref 0.0 )  then 0.0
+         else
+            switch islcn lcn_crp switch isrcn rcn_crp
+            switch isncn ncn_crp switch isicn icn_crp      nor_crp
   
-         if ( equal cycleroutes_pref 0.0 )  then 0.0 else
-         
-         if islcn then lcn_crp else
-         if isrcn then rcn_crp else
-         if isncn then ncn_crp else
-         if isicn then icn_crp
-                  else nor_crp
-  ) 
-  
-  assign rawcostfactor2 (                                        # MTB_factor_for_road + (non)/cycleroute CF adjustment
+  assign rawcostfactor2                 # MTB_factor_for_road + (non)/cycleroute CF adjustment
     if greater rawcostfactor 9997 then rawcostfactor
-    else  
-    #reworked in 2.5.18 - multiplicative
-    add   cycleroute_tweak 
-    add   rawcostfactor
+    else      #reworked in 2.5.18 - multiplicative
+    add   cycleroute_tweak    add   rawcostfactor
     add   MTB_factor_for_road           # penalizes paved and promotes unpaved roads See *****) for more
           smallpaved_factor_for_road    # penalizes mainroads and unpaved roads, promotes the middle
-    )  
     
   assign access-traffic-penalty max onewaypenalty max accesspenalty  switch allow_traffic_penalty trafficpenalty 0
   
-  assign costfactor (
+  assign costfactor 
     # calculations may provide illegal costfactor < 1
-    if greater rawcostfactor2 9997 then rawcostfactor2 else
-    add
-           max 1.0 rawcostfactor2
-           access-traffic-penalty  # v2.5.5  was moved from rawcostfactor to avoid being affected by MTB_factor and smallpaved_factor
-  )        
-    
-  assign uphillcostfactor = (
+    if greater rawcostfactor2 9997 then rawcostfactor2
+    else add access-traffic-penalty max 1.0 rawcostfactor2   # v2.5.5  was moved from rawcostfactor to avoid being affected by MTB_factor and smallpaved_factor
+      
+  assign uphillcostfactor
     if greater rawcostfactor2 9997 then rawcostfactor2 else
     add access-traffic-penalty   # v2.5.5  was moved from rawcostfactor to avoid being affected by MTB_factor and smallpaved_factor
-    max 1.0
-    if ( equal hills 4 ) then ( multiply rawcostfactor2 valley_nonflat_multiplier )
-    else
-    add uphillCFshift
-    add rawcostfactor2 
-    if   ismainroad                                 then 0.1 
-    else if highway=residential|living_street       then -0.1 
-    else if ispaved                                 then -0.1
-    else if surface=gravel|pebblestone              then 0.2
-    else if ismuddy                                 then 0.2   
-    else if isunpaved                               then 0.1   
-                                                    else 0.0
-    )                          
-
-  assign downhillcostfactor =  (
+    max 1.0 if ( equal hills 4 ) then ( multiply rawcostfactor2 valley_nonflat_multiplier )
+            else  add uphillCFshift add rawcostfactor2 multiply ( switch ismainroad 0.2 -0.5 ) abs_univ_factor
+                              
+  assign downhillcostfactor
     if greater rawcostfactor2 9997 then rawcostfactor2 else
     add access-traffic-penalty  # v2.5.5  was moved from rawcostfactor to avoid being affected by MTB_factor and smallpaved_factor
-    max 1.0
-    if ( equal hills 4 ) then ( multiply rawcostfactor2 valley_nonflat_multiplier )
-    else
-    add downhillCFshift
-    add rawcostfactor2
-    if   ismainroad                                 then -0.1
-    else if  highway=residential|living_street      then 0.0
-    else if  ispaved                                then -0.1
-    else if surface=gravel|pebblestone              then 0.5
-    else if surface=fine_gravel|sand                then 0.4
-    else if ismuddy                                 then 0.5  
-    else if tracktype=grade5                        then 0.4
-    else if tracktype=grade4                        then 0.3
-    else if highway=path|footway                    then 0.2
-    else if tracktype=grade3                        then 0.2
-    else if surface=cobblestone                     then if iswet then 0.3 else 0.1
-    else if tracktype=grade2                        then 0.1
-    else if isunpaved                               then 0.2
-                                                    else 0.0
-    )
-                                                   
+    max 1.0 if ( equal hills 4 ) then ( multiply rawcostfactor2 valley_nonflat_multiplier )
+            else  add downhillCFshift add rawcostfactor2 multiply -0.2 univ_factor_coef
+                         
 # bend /costfactors
 
 # bstart /priorityclassifiers
