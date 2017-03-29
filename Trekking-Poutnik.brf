@@ -20,7 +20,9 @@ assign   avoid_unsafe           0 # 0 as default, gives penalty to mainroad with
 assign   hills                  1 # 1=default / 0=BRouter default/ 1=+ penalty for uphills >3.0%/ 2=velomobile-like avoiding slopes, 3= simulates ascend/length time equiv.     4=valley mode
 
 assign   isbike_for_mainroads   true # default=true / if false then bike friendly tag hints for mainroads are ignored, keeping their high penalties. v2.5.20
-assign   path_preference        0.0 # 0.0 as default, try 20.0 to penalize nonpath ways a/o paved ways
+assign   path_preference        20.0 # 0.0 as default, try 20.0 to penalize nonpath ways a/o paved ways
+assign   originalisbike         false
+assign   new_nonpath_penalty    0
 
 assign   consider_elevation     1 # 1 as default
 assign   consider_smoothness    1 # 1 as default
@@ -120,7 +122,7 @@ assign   ford_costfactor =       if ( equal ford_handling_coef million ) then 99
                                  if ( equal ford_handling_coef 0.0 ) then 0.0 else
                                  multiply c_ford_costfactor ford_handling_coef 
 
-assign originalisbike = false
+
 
 # bend /global
 # bstart /way
@@ -278,18 +280,6 @@ if mtb:scale=4|5|6   then 9000
                      else 0.0
 
 assign roughness_penalty max smoothness_penalty max mtb_scale_penalty  ( if ford=yes then ford_costfactor else 0 ) 
-
-assign nonpath_penalty = (
-    if      ( equal path_preference 0.0 )   then 0.0                # nonpath_penalty inactive
-    else if not istrack                     then path_preference    #istrack = highway=track/path/road/footway
-    else if ispaved                         then ( multiply path_preference 0.5 )
-    else if or  ( and not isunpaved  not highway=path )  ( tracktype=grade1|grade2 )
-                                            then ( multiply path_preference 0.25 )
-    else if not ( and isunpaved and highway=path  and tracktype=grade1|grade2   not surface=gravel|cobblestone|pebblestone )  
-                                            then  ( multiply path_preference 0.125 )
-    else 0.0
-  
-)
     
 # bend /roughness_penalty
 
@@ -338,6 +328,24 @@ assign univ_factor_coef =
                    )
           )           
                    
+)
+assign unithreshhold -0.5
+assign uni2 max 0.0 sub  univ_factor_coef unithreshhold  # -1..+1 --> 0..+2+unithreshhold
+assign uni2sq multiply 0.5 multiply uni2 uni2 # 0..+1..+2 --> 0..+0.5..+2
+
+assign nonpath_penalty = (
+    if      ( equal path_preference 0.0 )   then 0.0                # nonpath_penalty inactive
+    
+    else if new_nonpath_penalty then  ( multiply path_preference uni2sq )  
+    else (
+        if not istrack                     then path_preference    #istrack = highway=track/path/road/footway
+        else if ispaved                         then ( multiply path_preference 0.5 )
+        else if or  ( and not isunpaved  not highway=path )  ( tracktype=grade1|grade2 )
+                                                then ( multiply path_preference 0.25 )
+        else if not ( and isunpaved and highway=path  and tracktype=grade1|grade2   not surface=gravel|cobblestone|pebblestone )  
+                                                then  ( multiply path_preference 0.125 )
+        else 0.0
+    )
 )
 
 assign MTB_factor_for_road    if  ( equal MTB_factor 0.0 ) then 0.0 else multiply MTB_factor  univ_factor_coef
