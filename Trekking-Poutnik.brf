@@ -370,8 +370,8 @@ assign tracktype_penalty
 if tracktype=  then ( 
     if istrack then 0.2 else 0.0 
 ) else ( 
-    switch tracktype=grade1 0.0 switch tracktype=grade2 0.3 switch tracktype=grade3 0.6
-    switch tracktype=grade4 1.0 switch tracktype=grade5 1.5 0.2
+    switch tracktype=grade1 0.0 switch tracktype=grade2 0.4 switch tracktype=grade3 0.75
+    switch tracktype=grade4 1.0 switch tracktype=grade5 1.2 0.2
 )
  
 assign surface_penalty (  #minor tweaks
@@ -487,13 +487,11 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
   switch    route=ferry    switch allow_ferries 5.67 10000
   switch    highway=construction                     10000
   
-  add nonpath_penalty
-
   add highwayclass_basefactor
-  max not_isbike_penalty
+  add not_isbike_penalty
+  add unsafe_penalty
   max penalty4max
-      if ismainroad then unsafe_penalty else 0.0
-  
+      nonpath_penalty
  )  
   
   assign cycleroute_tweak 
