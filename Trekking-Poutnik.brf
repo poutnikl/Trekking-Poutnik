@@ -22,7 +22,6 @@ assign   hills                  1 # 1=default / 0=BRouter default/ 1=+ penalty f
 assign   isbike_for_mainroads   true # default=true / if false then bike friendly tag hints for mainroads are ignored, keeping their high penalties. v2.5.20
 assign   path_preference        0.0 # 0.0 as default, try 20.0 to penalize nonpath ways a/o paved ways
 assign   originalisbike         false
-assign   new_nonpath_penalty    0
 
 assign   consider_elevation     1 # 1 as default
 assign   consider_smoothness    1 # 1 as default
@@ -329,36 +328,14 @@ assign univ_factor_coef =
           )           
                    
 )
-assign unithreshhold -0.75 # -1 / -0.75 / -0.5 / -0.33 / -0.25 / 0
 
-# y=a + bx   ,  # -1.x .. +1 --> 0 .. +1
-# th =  -1   a =  1/2 b = 1/2   th =  -3/4   a =  3/7 0.429 b = 4/7 0.571
-# th = -1/2  a =  1/3 b = 2/3   th = -1/3  a =  1/4 b = 3/4
-# th = -1/4  a =  1/5 b = 4/5   th = 0     a =  0   b = 1
-
-assign tha = switch equal unithreshhold -1   0.5   switch equal unithreshhold -0.75 0.429
-             switch equal unithreshhold -0.5 0.333 switch equal unithreshhold -0.33 0.25
-             switch equal unithreshhold -0.25 0.2         0
-
-assign thb = sub 1 tha     
-
-assign uni2 max 0.0 add tha multiply thb univ_factor_coef
-
-assign uni2sq multiply uni2 uni2 # 0..+1
-
-assign nonpath_penalty = (
-    if      ( equal path_preference 0.0 )   then 0.0                # nonpath_penalty inactive
-    
-    else if new_nonpath_penalty then  ( multiply path_preference uni2sq )  
-    else ( multiply path_preference
-        if not istrack      then 1
-        else if ispaved     then 0.5
-        else if or  ( and not isunpaved  not highway=path )  ( tracktype=grade1|grade2 )
-             then 0.25 
-        else if not ( and isunpaved and highway=path  and tracktype=grade1|grade2   not surface=gravel|cobblestone|pebblestone )  
-             then 0.125   else 0.0
-    )
-)
+assign nonpath_penalty = 
+    if    equal path_preference 0.0    then 0.0 # nonpath_penalty inactive
+    else  multiply ( max 0 path_preference )
+        if ismainroad    then 1    else if not or istrack highway=cycleway  then 0.6
+        else if ispaved  then 0.4  else if or not highway=path or not isunpaved  tracktype=grade1|grade2 then 0.25 
+        else if or not isunpaved or not highway=path  or not tracktype=grade3|grade4|grade5
+            surface=gravel|cobblestone|pebblestone    then 0.15  else 0.0
 
 assign MTB_factor_for_road    if  ( equal MTB_factor 0.0 ) then 0.0 else multiply MTB_factor  univ_factor_coef
    
