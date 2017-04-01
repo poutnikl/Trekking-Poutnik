@@ -444,13 +444,13 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
          else if equal CRmode 1 then current_crp                           # additive       but for LD CR 
          else if equal CRmode 2 then multiply current_crp rawcostfactor    # multiplicative but for LD CR 
          
-         # CRmode 3,5  additive       for non CR(5) ( and local CR(3) )    + subtractive for LD (3) or all(5) CR
-         # CRmode 4,6  multiplicative for non CR(5) ( and local CR(3) )    + subtractive for LD (3) or all(5) CR
+         # CRmode 3,5  additive       for non CR     + subtractive for LD (3) or all(5) CR
+         # CRmode 4,6  multiplicative for non CR     + subtractive for LD (4) or all(6) CR
 
-         #non CR or local CR + CMmode = 3,4 = additive(3,5) or multiplicative(4,6) penalty
-         else if or equal current_crp nor_crp and lesser CRmode 5 not greater current_crp 0.0
+         # non CR = additive(3,5) or multiplicative(4,6) penalty
+         else if equal current_crp nor_crp  
             then  if or equal CRmode 3 equal CRmode 5 then current_crp else multiply current_crp rawcostfactor
-         else if not greater rawcostfactor 1.0 then rawcostfactor      # let it be 
+         else if or ( not greater rawcostfactor 1.0 ) ( and lesser CRmode 5 greater current_crp 0.0 ) then rawcostfactor      # let it be 
          else max ( sub 1.0 rawcostfactor )  # do not subtract more than  rawcostfactor - 1 
                   ( multiply rawcostfactor sub current_crp cycleroutes_pref ) #subtract it
                                                  
