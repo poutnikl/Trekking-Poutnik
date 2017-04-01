@@ -260,9 +260,9 @@ if smoothness=                                            then 0.0 else
 if smoothness=excellent|very_good|good                    then 0.0 else
 if smoothness=intermediate                                then 0.2 else
 if smoothness=bad|robust_wheels                           then 0.5 else
-if smoothness=very_bad|high_clearance                     then 1.0 else
-if smoothness=horrible|off_road_wheels                    then 2.0 else
-if smoothness=very_horrible                               then 4.0 else
+if smoothness=very_bad|high_clearance                     then 1.2 else
+if smoothness=horrible|off_road_wheels                    then 2.5 else
+if smoothness=very_horrible                               then 5.0 else
 if smoothness=impassable                                  then 10.0 else
 0.0
 
@@ -275,7 +275,7 @@ if mtb:scale=        then 0.0 else   if mtb:scale=0-      then 0.0 else
 if mtb:scale=0       then 0.0 else   if mtb:scale=0+      then 0.3 else
 if mtb:scale=1-      then 0.7 else   if mtb:scale=1       then 1.2 else
 if mtb:scale=1+      then 1.8 else   if mtb:scale=2-      then 2.5 else
-if mtb:scale=2       then 4.0 else   if mtb:scale=2+      then 8.0 else
+if mtb:scale=2       then 5.0 else   if mtb:scale=2+      then 10.0 else
 if mtb:scale=3       then 15.0 else   
 if mtb:scale=4|5|6   then 9000
                      else 0.0
@@ -444,11 +444,23 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
          if ( equal cycleroutes_pref 0.0 ) then 0.0 
          else if equal CRmode 1 then current_crp                                #additive
          else if equal CRmode 2 then multiply current_crp rawcostfactor    #multiplicative 
-         else if equal CRmode 3 then if not nodeaccessgranted  then multiply c_crp2 rawcostfactor    #multiplicative 
+         else if equal CRmode 3 then if not equal current_crp 0.0  then c_crp2    #additive + subtractive for long distance routes
+                                else if greater rawcostfactor 1.0 then  
+                                      max ( sub 1.0 rawcostfactor )  ( multiply rawcostfactor sub c_crp2 cycleroutes_pref )
+                                else  rawcostfactor                       
+         else if equal CRmode 4 then if not equal current_crp 0.0 then multiply c_crp2 rawcostfactor    #multiplicative + substractive for long distance routes
+                                else if greater rawcostfactor 1.0 then  
+                                      max ( sub 1.0 rawcostfactor )  ( multiply rawcostfactor sub c_crp2 cycleroutes_pref )
+                                else  rawcostfactor
+         else if equal CRmode 5 then if not nodeaccessgranted  then c_crp2    #additive + subtractive
                                 else if greater rawcostfactor 1.0 then  
                                       max ( sub 1.0 rawcostfactor )  ( multiply rawcostfactor sub c_crp2 cycleroutes_pref )
                                 else  rawcostfactor 
-         else 0.0                       
+         else if equal CRmode 6 then if not nodeaccessgranted  then multiply c_crp2 rawcostfactor    #multiplicative + substractive
+                                else if greater rawcostfactor 1.0 then  
+                                      max ( sub 1.0 rawcostfactor )  ( multiply rawcostfactor sub c_crp2 cycleroutes_pref )
+                                else  rawcostfactor 
+         else 0.0                                
                                 
   assign rawcostfactor2                 # MTB_factor_for_road + (non)/cycleroute CF adjustment
     if isCFgt9997 then rawcostfactor
