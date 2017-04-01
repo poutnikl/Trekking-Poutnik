@@ -13,7 +13,9 @@
 ---context:global
 assign   iswet                  0 # 0 as default, *) flag for weather conditions
 assign   turnInstructionMode  = 1 # 0=none, 1=auto-choose, 2=locus-style, 3=osmand-style
-assign   cycleroutes_pref       0.2 # *) costfactor penalty for not being cycleroute
+assign   cycleroutes_pref       0.2 # also CRP *)  costfactor penalty for not being cycleroute
+assign   CRmode                 2   # 1-additive CF(noncycleroute) = CF + CRP / 2 multiplicative CF = CF * ( 1 + CRP ), 
+                                    # multiplicative+substractive  3 - CF = CF * ( 1 + CRP/2 ), CF(cycleroute) = max ( 1, CF * ( 1 - CRP/2 ))
 assign   MTB_factor             0.0 # default 0.0, *)
 assign   smallpaved_factor      0.0 # default 0.0, *)
 assign   avoid_unsafe           0 # 0 as default, gives penalty to mainroad without bike friendly status.
@@ -435,12 +437,19 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
 
   assign isCFgt9997       greater rawcostfactor 9997
   
-  assign cycleroute_tweak 
-         if ( equal cycleroutes_pref 0.0 )  then 0.0
-         else
-            switch islcn lcn_crp switch isrcn rcn_crp
-            switch isncn ncn_crp switch isicn icn_crp      nor_crp
+  assign current_crp      switch islcn lcn_crp switch isrcn rcn_crp  switch isncn ncn_crp switch isicn icn_crp      nor_crp
+  assign c_crp2      multiply 1.0 current_crp
   
+  assign cycleroute_tweak 
+         if ( equal cycleroutes_pref 0.0 ) then 0.0 
+         else if equal CRmode 1 then current_crp                                #additive
+         else if equal CRmode 2 then multiply current_crp rawcostfactor    #multiplicative 
+         else if equal CRmode 3 then if not nodeaccessgranted  then multiply c_crp2 rawcostfactor    #multiplicative 
+                                else if greater rawcostfactor 1.0 then  
+                                      max ( sub 1.0 rawcostfactor )  ( multiply rawcostfactor sub c_crp2 cycleroutes_pref )
+                                else  rawcostfactor 
+         else 0.0                       
+                                
   assign rawcostfactor2                 # MTB_factor_for_road + (non)/cycleroute CF adjustment
     if isCFgt9997 then rawcostfactor
     else      #reworked in 2.5.18 - multiplicative
