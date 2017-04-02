@@ -14,7 +14,8 @@
 assign   iswet                  0 # 0 as default, *) flag for weather conditions
 assign   turnInstructionMode  = 1 # 0=none, 1=auto-choose, 2=locus-style, 3=osmand-style
 assign   cycleroutes_pref       0.2 # also CRP *)  costfactor penalty for not being cycleroute
-assign   CRmode                 3   # See see cycleroute_tweak below
+assign   CRmode                 3   # See cycleroute_tweak below
+assign   UDcostON               true
 assign   MTB_factor             0.0 # default 0.0, *)
 assign   smallpaved_factor      0.0 # default 0.0, *)
 assign   avoid_unsafe           0 # 0 as default, gives penalty to mainroad without bike friendly status.
@@ -466,11 +467,11 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
   assign costfactor    if isCFgt9997 then rawcostfactor2
                        else add access-traffic-penalty max 1.0 rawcostfactor2
       
-  assign uphillcostfactor  if isCFgt9997 then rawcostfactor2 else
+  assign uphillcostfactor  if not UDcostON then costfactor else if isCFgt9997 then rawcostfactor2 else
     add access-traffic-penalty max 1.0 if ( equal hills 4 ) then ( multiply rawcostfactor2 valley_nonflat_multiplier )
                                        else  add uphillCFshift add rawcostfactor2 multiply ( switch ismainroad 0.2 -0.5 ) abs_univ_factor
                               
-  assign downhillcostfactor if isCFgt9997 then rawcostfactor2 else
+  assign downhillcostfactor if not UDcostON then costfactor else if isCFgt9997 then rawcostfactor2 else
     add access-traffic-penalty max 1.0 if ( equal hills 4 ) then ( multiply rawcostfactor2 valley_nonflat_multiplier )
                                        else  add downhillCFshift add rawcostfactor2 multiply -0.2 univ_factor_coef
                          
