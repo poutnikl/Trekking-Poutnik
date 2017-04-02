@@ -442,31 +442,28 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
   
   assign current_crp      switch islcn lcn_crp switch isrcn rcn_crp  switch isncn ncn_crp switch isicn icn_crp      nor_crp
   
+  assign nonLDCRpenalty     if or or equal CRmode 1 equal CRmode 3 equal CRmode 5  # additive for 1,3,5, multiplicative for 2,4,6
+                              then current_crp else multiply current_crp rawcostfactor
   
   assign cycleroute_tweak 
-         if ( equal cycleroutes_pref 0.0 ) then 0.0 
-         else if equal CRmode 1 then current_crp                           # additive       but for LD CR 
-         else if equal CRmode 2 then multiply current_crp rawcostfactor    # multiplicative but for LD CR 
+         if ( or not greater cycleroutes_pref 0.0 or lesser CRmode 1 greater CRmode 6 ) then 0.0 
+         else if lesser CRmode 3 then nonLDCRpenalty   # additive(1) resp. multiplicative(2) but for LD CR 
          
          # CRmode 3,5  additive       for non CR     + subtractive for LD (3) or all(5) CR
          # CRmode 4,6  multiplicative for non CR     + subtractive for LD (4) or all(6) CR
 
          # non CR = additive(3,5) or multiplicative(4,6) penalty
-         else if equal current_crp nor_crp  
-            then  if or equal CRmode 3 equal CRmode 5 then current_crp else multiply current_crp rawcostfactor
-         else if or ( not greater rawcostfactor 1.0 ) ( and lesser CRmode 5 greater current_crp 0.0 ) then rawcostfactor      # let it be 
-         else max ( sub 1.0 rawcostfactor )  # do not subtract more than  rawcostfactor - 1 
-                  ( multiply rawcostfactor sub current_crp cycleroutes_pref ) #subtract it
+         else if equal current_crp nor_crp    then  nonLDCRpenalty      # non CR penalty is same for all CRmodes
+         else if and lesser CRmode 5 greater current_crp 0.0 then 0.0   # let CF of local CR as is for CRmodes 3,4
+         else multiply rawcostfactor sub current_crp cycleroutes_pref   # multiplicative substraction for LDCR ( and local CR for CRmodes 5,6 )   
+                  
                                                  
-                                
-  assign rawcostfactor2                 # MTB_factor_for_road + (non)/cycleroute CF adjustment
-    if isCFgt9997 then rawcostfactor
-    else      #reworked in 2.5.18 - multiplicative
-    add   rawcostfactor  add   cycleroute_tweak  add   MTB_factor_for_road    smallpaved_factor_for_road   
+  # can be <1, adjusted to >=1 in final step of calculation of costfactor, uphillcostfactor,downhillcostfactor                              
+  assign rawcostfactor2  if isCFgt9997 then rawcostfactor
+    else add rawcostfactor add cycleroute_tweak add MTB_factor_for_road smallpaved_factor_for_road   
     
   assign access-traffic-penalty max onewaypenalty max accesspenalty  switch allow_traffic_penalty trafficpenalty 0
 
-  # v2.5.5 access-(traffic)-penalty was moved from rawcostfactor to final costfactors to avoid being affected by MTB_factor and smallpaved_factor  
   assign costfactor    if isCFgt9997 then rawcostfactor2
                        else add access-traffic-penalty max 1.0 rawcostfactor2
       
