@@ -148,10 +148,13 @@ assign istrack  highway=track|road|path|footway
 assign ismainroad highway=motorway|motorway_link|trunk|trunk_link|primary|primary_link|secondary|secondary_link|tertiary|tertiary_link|unclassified
 assign isotherroad = and not istrack not ismainroad
 
+assign hascycleway = not
+  and ( or cycleway= cycleway=no|none ) and ( or cycleway:left= cycleway:left=no ) ( or cycleway:right= cycleway:right=no )
+  
 #2.6.* inserted originalisbike option                                      
+assign isbike_candidate or bicycle=yes|permissive|designated or hascycleway
+        if originalisbike then lcn=yes else nodeaccessgranted 
 
-assign isbike_candidate or bicycle=yes|permissive|designated or not cycleway=
-        if ( or originalisbike equal cycleroutes_pref 0.0 ) then lcn=yes else nodeaccessgranted 
 assign isbike and ( or ( not ismainroad ) isbike_for_mainroads )  isbike_candidate
 
 
@@ -210,6 +213,7 @@ assign defaultaccess =
    
 assign bikeaccess =
        if nodeaccessgranted then true
+       else if hascycleway then true
        else if bicycle= then   (  if vehicle= then defaultaccess  else not vehicle=private|no   )
                         else  not bicycle=private|no|dismount  
 
@@ -377,8 +381,7 @@ assign unsafe_penalty
        then multiply unsafe_penalty_value  ( if iswet then  0.5 else 1.0 )  
        else 0.0  
 
-assign hascycleway = not
-  and ( or cycleway= cycleway=no|none ) and ( or cycleway:left= cycleway:left=no ) ( or cycleway:right= cycleway:right=no )
+
 
 assign trafficpenalty0 = (
     if highway=primary|primary_link then
