@@ -14,8 +14,6 @@
 assign   iswet                  0 # 0 as default, *) flag for weather conditions
 assign   turnInstructionMode  = 1 # 0=none, 1=auto-choose, 2=locus-style, 3=osmand-style
 assign   cycleroutes_pref       0.2 # also CRP *)  costfactor penalty for not being cycleroute
-assign   CRmode                 3   # See cycleroute_tweak below
-assign   UDcostON               true
 assign   MTB_factor             0.0 # default 0.0, *)
 assign   smallpaved_factor      0.0 # default 0.0, *)
 assign   avoid_unsafe           0 # 0 as default, gives penalty to mainroad without bike friendly status.
@@ -41,19 +39,6 @@ assign   considerTurnRestrictions = true  #v2.5.11
 # Internal parameters
 
 #new in 2.5.12
-#reworked in 2.5.17
-#reworked in 2.5.18 - multiplicative
-#reworked in 2.5.19 - back addititive + local route progressive for cycleroute pref <=1
-assign    local_cr_coef = 0.4
-assign    icn_crp 0.0
-assign    ncn_crp icn_crp
-assign    rcn_crp multiply local_cr_coef multiply cycleroutes_pref min  1.0  cycleroutes_pref 
-# cycleroutes_pref -> local_cr_pref  for local_cr_coef 0.4
-# 2.0 -> 0.8  / 1.0 -> 0.4 / 0.5 -> 0.1 / 0.25 -> 0.025 / 0.2 -> 0.016 / 0.1 -> 0.004
-
-assign    lcn_crp rcn_crp
-assign    nor_crp cycleroutes_pref
-
 
 assign   uphillcostvalue        switch equal hills 1 70   switch equal hills 2 80
                                 switch equal hills 3 60   switch equal hills 4 150     0 
@@ -123,7 +108,7 @@ assign   ford_costfactor =       if ( equal ford_handling_coef million ) then 99
                                  if ( equal ford_handling_coef 0.0 ) then 0.0 else
                                  multiply c_ford_costfactor ford_handling_coef 
 
-
+assign   UDcostON               true
 
 # bend /global
 # bstart /way
@@ -439,24 +424,21 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
  )  
 
   assign isCFgt9997       greater rawcostfactor 9997
+  assign ncncoef  multiply cycleroutes_pref 0.2
+  assign lcncoef  multiply cycleroutes_pref 0.8
   
-  assign current_crp      switch isicn icn_crp switch isncn ncn_crp switch isrcn rcn_crp switch islcn lcn_crp  nor_crp
   
-  assign nonLDCRpenalty     if or or equal CRmode 1 equal CRmode 3 equal CRmode 5  # additive for 1,3,5, multiplicative for 2,4,6
-                              then current_crp else multiply current_crp rawcostfactor
-  
+  assign LDCRboost  multiply sub 1.0 rawcostfactor    cycleroutes_pref
   assign cycleroute_tweak 
-         if ( or not greater cycleroutes_pref 0.0 or lesser CRmode 1 greater CRmode 6 ) then 0.0 
-         else if lesser CRmode 3 then nonLDCRpenalty   # additive(1) resp. multiplicative(2) but for LD CR 
-         
-         # CRmode 3,5  additive       for non CR     + subtractive for LD (3) or all(5) CR
-         # CRmode 4,6  multiplicative for non CR     + subtractive for LD (4) or all(6) CR
+  #2.6 reworked : non cyclenetwork penalty = + cycleroutes_pref  ( 0..1 , default 0.2)
+  #               ICN boost                = - ( CF - 1 ) * cycleroutes_pref, leading to CF=1.0 for cycleroutes_pref = 1.0
+  #               other CN: weitgted average of above, with weights ncncoef, lcncoef shifting with cycleroutes_pref
 
-         # non CR = additive(3,5) or multiplicative(4,6) penalty
-         else if equal current_crp nor_crp    then  nonLDCRpenalty      # non CR penalty is same for all CRmodes
-         else if and lesser CRmode 5 greater current_crp 0.0 then 0.0   # let CF of local CR as is for CRmodes 3,4
-         else multiply rawcostfactor sub current_crp cycleroutes_pref   # multiplicative substraction for LDCR ( and local CR for CRmodes 5,6 )   
-                  
+         if not greater cycleroutes_pref 0.0 then 0.0
+         else if not is_ldcr then cycleroutes_pref
+         else if isicn then LDCRboost
+         else if isncn then add multiply ncncoef cycleroutes_pref     multiply ( sub  1.0 ncncoef ) LDCRboost 
+         else               add multiply lcncoef cycleroutes_pref     multiply ( sub  1.0 lcncoef ) LDCRboost 
                                                  
   # can be <1, adjusted to >=1 in final step of calculation of costfactor, uphillcostfactor,downhillcostfactor                              
   assign rawcostfactor2  if isCFgt9997 then rawcostfactor
