@@ -111,7 +111,7 @@ assign   ford_costfactor =       if ( equal ford_handling_coef million ) then 99
 assign   UDcostON               true
 
 assign   ncncoef  multiply cycleroutes_pref 0.2
-assign   lcncoef  multiply cycleroutes_pref 0.8
+assign   lcncoef  add 0.2 multiply cycleroutes_pref 0.6
 
 # bend /global
 # bstart /way
