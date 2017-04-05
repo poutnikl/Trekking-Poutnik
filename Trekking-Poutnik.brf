@@ -110,6 +110,9 @@ assign   ford_costfactor =       if ( equal ford_handling_coef million ) then 99
 
 assign   UDcostON               true
 
+assign   ncncoef  multiply cycleroutes_pref 0.2
+assign   lcncoef  multiply cycleroutes_pref 0.8
+
 # bend /global
 # bstart /way
 ---context:way   # following code refers to way-tags
@@ -369,6 +372,7 @@ assign unsafe_penalty
 
 
 assign trafficpenalty0 = (
+    if not allow_traffic_penalty then 0.0 else
     if highway=primary|primary_link then
     (
       if      estimated_traffic_class=4 then 0.2
@@ -403,13 +407,9 @@ assign trafficpenalty =
    
 # bstart /costfactors
 
-assign penalty4max = max roughness_penalty max tracktype_penalty max surface_penalty wet_penalty
+assign penaltymax = max roughness_penalty max tracktype_penalty max surface_penalty max wet_penalty trafficpenalty
 
 assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation of costfactor, uphillcostfactor,downhillcostfactor
-  
-  # v2.5.5>  add ( max onewaypenalty max accesspenalty  switch allow_traffic_penalty trafficpenalty 0 ) 
-  # was moved  to final (up/down/costfactor calculation to avoid being affected by costfactor tweaks
-    
   switch and highway= not route=ferry  10000 #only highways unless ferry
   switch highway=motorway|motorway_link|proposed|abandoned  10000
   
@@ -420,13 +420,10 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
   switch    route=ferry    switch allow_ferries 5.67 10000
   switch    highway=construction                     10000
   
-  add highwayclass_basefactor   add not_isbike_penalty   add unsafe_penalty   max penalty4max   nonpath_penalty
+  add highwayclass_basefactor   add not_isbike_penalty   add unsafe_penalty   max penaltymax   nonpath_penalty
  )  
 
   assign isCFgt9997       greater rawcostfactor 9997
-  assign ncncoef  multiply cycleroutes_pref 0.2
-  assign lcncoef  multiply cycleroutes_pref 0.8
-  
   
   assign LDCRboost  multiply sub 1.0 rawcostfactor    cycleroutes_pref
   assign cycleroute_tweak 
@@ -449,11 +446,11 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
   assign costfactor    if isCFgt9997 then rawcostfactor2
                        else add access-traffic-penalty max 1.0 rawcostfactor2
       
-  assign uphillcostfactor  if not UDcostON then costfactor else if isCFgt9997 then rawcostfactor2 else
+  assign uphillcostfactor  if or not UDcostON isCFgt9997 then costfactor else
     add access-traffic-penalty max 1.0 if ( equal hills 4 ) then ( multiply rawcostfactor2 valley_nonflat_multiplier )
                                        else  add uphillCFshift add rawcostfactor2 multiply ( switch ismainroad 0.2 -0.5 ) abs_univ_factor
                               
-  assign downhillcostfactor if not UDcostON then costfactor else if isCFgt9997 then rawcostfactor2 else
+  assign downhillcostfactor if or not UDcostON isCFgt9997 then costfactor else
     add access-traffic-penalty max 1.0 if ( equal hills 4 ) then ( multiply rawcostfactor2 valley_nonflat_multiplier )
                                        else  add downhillCFshift add rawcostfactor2 multiply -0.2 univ_factor_coef
                          
