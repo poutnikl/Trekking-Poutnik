@@ -32,9 +32,7 @@ assign   allow_traffic_penalty  1 # 1 as default
 assign   StrictNOBicycleaccess          0 # 0 allows but penalizes foot only access / 1 forbides foot only access.
 assign   valley_nonflat_multiplier = 2.0
 
-assign   use_proposed_cn        1 # 0 as default, considers proposed cycle networks as unmarked but valid cycleroutes.
-
-assign   considerTurnRestrictions = true  #v2.5.11
+assign   allow_default_barrier_restriction  false # If true, default access for barrier=gate is false. see node context
 
 # Internal parameters
 
@@ -82,6 +80,9 @@ assign   downhillCFshift   0.0 # prioritizing/penalizing of up/downhills, based 
 assign    pass1coefficient 1.8
 assign    pass2coefficient 0
 
+assign   use_proposed_cn        1 # 0 as default, considers proposed cycle networks as unmarked but valid cycleroutes.
+assign   considerTurnRestrictions = true  #v2.5.11
+
 assign   unsafe_penalty_value 1.0 # 1 - was 2 in Trekking, but this may cause U-like safe routes
 assign   cost_of_unknown      2.0 # 2 as default, cost of highway=
 
@@ -110,8 +111,8 @@ assign   ford_costfactor =       if ( equal ford_handling_coef million ) then 99
 
 assign   UDcostON               true
 
-assign   ncncoef  max 0 min 1 add 0.0 multiply cycleroutes_pref 0.2
-assign   lcncoef  max 0 min 1 add 0.0 multiply cycleroutes_pref 1.0
+assign   ncncoef  max 0 min 1 multiply cycleroutes_pref 0.2
+assign   lcncoef  max 0 min 1 multiply cycleroutes_pref 1.0
 
 # bend /global
 # bstart /way
@@ -330,7 +331,7 @@ if tracktype=  then ( if istrack then 0.2 else 0.0 ) else
 assign surface_penalty
     switch surface=asphalt|paved       0.0  switch surface=concrete|paving_stones 0.2
     switch surface=cobblestone|sett    0.3  switch surface=compacted|fine_gravel  0.3
-    switch or surface= surface=unknown switch istrack 0.2 0.0
+    switch or surface= surface=unknown switch ( and istrack not tracktype=grade1 ) 0.2 0.0
     switch surface=ground|earth|unpaved|dirt    0.4 switch surface=grass|sand     1.0
     switch surface=gravel|pebblestone           1.2                               0.3
                                            
@@ -513,7 +514,8 @@ assign classifiermask add          isbadoneway
 assign   initial_cost_node    0     # 0 as default
 
 assign defaultaccess =
-       if ( access= ) then not barrier=gate # add default barrier restrictions here! - modified v2.5.15
+       if ( access= ) then  if allow_default_barrier_restriction then not barrier=gate # add default barrier restrictions here! - modified v2.5.15, conditioned in 2.6
+                                                                 else true 
        else if ( access=private|no ) then false
        else true
 
