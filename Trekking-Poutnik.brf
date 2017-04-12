@@ -34,7 +34,7 @@ assign   valley_nonflat_multiplier = 2.0
 
 assign   allow_default_barrier_restriction  false # If true, default access for barrier=gate is false. see node context
 
-# Internal parameters
+# Internal parameters - not intended to be tweaked by end users, unless they know what they are doing.
 
 #new in 2.5.12
 
@@ -48,6 +48,8 @@ assign   downhillcostvalue      switch equal hills 1 60   switch equal hills 2 8
                                 switch equal hills 3 0    switch equal hills 4 150    60  
 
 assign   validForBikes        1
+assign   processUnusedTags    0 # 1 is old Brouter behaviour, 0 is new Brouter default, more efficient, but ignores tags not used by a profile.
+                              
 
 # positive smallpaved factor effect subtracts itself from MTB factor effect
 # on MTB-like OSM way preference and elevation effect attenuation
@@ -135,7 +137,7 @@ assign is_ldcr if (  equal cycleroutes_pref 0.0 )   then false else nodeaccessgr
 
 assign istrack  highway=track|road|path|footway
 assign ismainroad highway=motorway|motorway_link|trunk|trunk_link|primary|primary_link|secondary|secondary_link|tertiary|tertiary_link|unclassified
-assign isotherroad = and not istrack not ismainroad
+assign isotherroad = not or istrack ismainroad
 
 assign hascycleway = not
   and ( or cycleway= cycleway=no|none ) and ( or cycleway:left= cycleway:left=no ) ( or cycleway:right= cycleway:right=no )
@@ -152,14 +154,17 @@ assign isunpaved not or surface= or ispaved or surface=fine_gravel surface=cobbl
 
 assign probablyGood or ispaved  and isbike not isunpaved  #probably good surface - weather independent
 
+assign turncost  if  ismainroad  then 90    else if ispaved then 60   else 30 
+# Turn cost is based solely on estimation of road speediness and eventual time cost of turning, partially promoting tracks )
 
 assign ismuddy and iswet
                and ( not surface=gravel|pebblestone )  # ***)
                    ( or isunpaved ( and surface= and highway=track|path not tracktype=grade1 )  )
-                   
 
-assign turncost  if  ismainroad  then 90    else if ispaved then 60   else 30 
-# Turn cost is based solely on estimation of road speediness and eventual time cost of turning, partially promoting tracks )
+assign nosurface or surface= surface=unknown
+assign nosurfacenortracktype and nosurface tracktype=
+assign ishard or ispaved surface=cobblestone|sett|compacted|fine_gravel|gravel|pebblestone  
+assign issoft not or nosurface ishard
 
 # bend /wayvariables
 
@@ -322,19 +327,24 @@ assign highwayclass_basefactor
         switch highway=cycleway   1.0 switch highway=residential|living_street   1.0
         switch highway=service    1.1 cost_of_unknown 
   
+  
 assign tracktype_penalty 
-#small update in 2.5.16 
-if tracktype=  then ( if istrack then 0.2 else 0.0 ) else 
-    switch tracktype=grade1 0.0 switch tracktype=grade2 0.4 switch tracktype=grade3 0.75
-    switch tracktype=grade4 1.0 switch tracktype=grade5 1.2                         0.2
- 
+    if tracktype=  then 0.0 else 
+        switch tracktype=grade1 0.0 switch tracktype=grade2 0.4 switch tracktype=grade3 0.7
+        switch tracktype=grade4 0.9 switch tracktype=grade5 1.0                         0.5
+        
 assign surface_penalty
-    switch surface=asphalt|paved       0.0  switch surface=concrete|paving_stones 0.2
-    switch surface=cobblestone|sett    0.3  switch surface=compacted|fine_gravel  0.3
-    switch or surface= surface=unknown switch ( and istrack not tracktype=grade1 ) 0.2 0.0
-    switch surface=ground|earth|unpaved|dirt    0.4 switch surface=grass|sand     1.0
-    switch surface=gravel|pebblestone           1.2                               0.3
-                                           
+    if nosurface then 0.0 else
+        switch surface=asphalt|paved   0.0 switch surface=concrete|paving_stones 0.2
+        switch surface=sett|compacted  0.4 switch surface=cobblestone|ground|earth|unpaved|dirt|fine_gravel  0.6
+        switch surface=grass|sand      1.0 switch surface=gravel|pebblestone     1.5        0.6        
+    
+assign tracktype_surface_penalty 
+    if nosurfacenortracktype then  ( switch ismainroad 0.0 switch isotherroad  0.2 switch highway=path 0.8 0.4  ) 
+    else if nosurface then tracktype_penalty
+    else if tracktype= then  surface_penalty  else
+    max tracktype_penalty surface_penalty
+                                       
 assign not_isbike_penalty   if isbike then 0.0 
      else if ismainroad then 
         switch highway=trunk|trunk_link          8.2  switch highway=primary|primary_link      1.5  
@@ -408,7 +418,7 @@ assign trafficpenalty =
    
 # bstart /costfactors
 
-assign penaltymax = max roughness_penalty max tracktype_penalty max surface_penalty max wet_penalty trafficpenalty
+assign penaltymax = max roughness_penalty max tracktype_surface_penalty max wet_penalty trafficpenalty
 
 assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation of costfactor, uphillcostfactor,downhillcostfactor
   switch and highway= not route=ferry  10000 #only highways unless ferry
