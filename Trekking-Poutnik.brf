@@ -294,8 +294,8 @@ assign univ_factor_coef
     switch  or ispaved tracktype=grade1                     0.1
     multiply rough_coef    
     add ( switch  highway=path -0.25 0.0 )
-        switch ( and surface=  tracktype= ) ( switch isbike 0.0 -0.25 )
-        switch surface=  ( switch or isbike tracktype=grade2|grade3 -0.25 -0.5 )
+        switch ( nosurfacenortracktype ) ( switch isbike 0.0 -0.25 )
+        switch nosurface  ( switch or isbike tracktype=grade2|grade3 -0.25 -0.5 )
         switch surface=compacted|fine_gravel -0.25 switch surface=cobblestone|sett  -0.4
         switch surface=ground|mud|dirt       -0.6  switch surface=grass|sand        -0.6   
         switch surface=gravel|pebblestone    -0.75   -0.6
