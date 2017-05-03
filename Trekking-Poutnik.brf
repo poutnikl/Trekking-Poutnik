@@ -321,7 +321,7 @@ assign highwayclass_basefactor
         switch highway=trunk|trunk_link          1.8  switch highway=primary|primary_link      1.5
         switch highway=secondary|secondary_link  1.2  switch highway=tertiary|tertiary_link    1.1   1.0
       else if istrack  then 
-        switch highway=track 1.0 switch highway=path 1.5 switch highway=footway  1.5  1.0  # highway=road 
+        switch highway=track 1.0 switch highway=path 1.1 switch highway=footway  1.2  1.0  # highway=road 
      else 
         switch highway=pedestrian 2.0 switch highway=bridleway 3.0
         switch highway=cycleway   1.0 switch highway=residential|living_street   1.0
@@ -346,7 +346,8 @@ assign tracktype_surface_penalty
     max tracktype_penalty surface_penalty
                                        
 assign not_isbike_penalty   if isbike then 0.0 
-     else if ismainroad then 
+     else if ismainroad then
+        add switch bicycle=use_sidepath 2.0 0.0  
         switch highway=trunk|trunk_link          8.2  switch highway=primary|primary_link      1.5  
         switch highway=secondary|secondary_link  0.4  0.3 # tertiary|tertiary_link|unclassified
      else if istrack then  
