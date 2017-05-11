@@ -19,11 +19,8 @@ assign   smallpaved_factor      0.0 # default 0.0, *)
 assign   avoid_unsafe           0 # 0 as default, gives penalty to mainroad without bike friendly status.
 assign   hills                  1 # 1=default / 0=BRouter default/ 1=+ penalty for uphills >3.0%/ 2=velomobile-like avoiding slopes, 3= simulates ascend/length time equiv.
                                   # 4=valley mode, 5=No-Flats mode
-                                        
-
 assign   isbike_for_mainroads   true # default=true / if false then bike friendly tag hints for mainroads are ignored, keeping their high penalties. v2.5.20
 assign   path_preference        0.0 # 0.0 as default, try 20.0 to penalize nonpath ways a/o paved ways
-assign   originalisbike         false
 
 assign   consider_elevation     1 # 1 as default
 assign   consider_smoothness    1 # 1 as default
@@ -41,15 +38,17 @@ assign   allow_default_barrier_restriction  false # If true, default access for 
 #new in 2.5.12
 
 assign   NoFlatMode             equal hills 5
+assign   ValleyMode             equal hills 4
+assign   originalisbike         false
 
 assign   uphillcostvalue        switch equal hills 1 70   switch equal hills 2 80
-                                switch equal hills 3 60   switch equal hills 4 150 switch NoFlatMode 0     0 
+                                switch equal hills 3 60   switch ValleyMode 150 switch NoFlatMode 0     0 
 assign   uphillcutoffvalue      switch equal hills 1 3.0  switch equal hills 2 1.0
-                                switch equal hills 3 0.5  switch equal hills 4 1.5 switch NoFlatMode 1.5   1.5 
+                                switch equal hills 3 0.5  switch ValleyMode 1.5 switch NoFlatMode 1.5   1.5 
 assign   downhillcutoffvalue    switch equal hills 1 1.5  switch equal hills 2 0.5
-                                switch equal hills 3 1.5  switch equal hills 4 1.5 switch NoFlatMode 1.5  1.5 
+                                switch equal hills 3 1.5  switch ValleyMode 1.5 switch NoFlatMode 1.5  1.5 
 assign   downhillcostvalue      switch equal hills 1 60   switch equal hills 2 80
-                                switch equal hills 3 0    switch equal hills 4 150 switch NoFlatMode 0   0  
+                                switch equal hills 3 0    switch ValleyMode 150 switch NoFlatMode 0   0  
 
 assign   Flat_Penalty         if NoFlatMode then 1.5 else 0.0
 
@@ -78,9 +77,9 @@ assign   uphillcost   if ( consider_elevation  )  then  ( multiply ( sub 1.0 MTB
 assign   uphillcutoff    if ( consider_elevation ) then (  multiply ( max 0.0 min 1.0 add 1.0 MTB_hillcostfactor  ) uphillcutoffvalue )   else 1.5
 assign   downhillcutoff  if ( consider_elevation ) then (  multiply ( max 0.0 min 1.0 add 1.0 MTB_hillcostfactor  ) downhillcutoffvalue ) else 1.5 
 
-assign   elevationpenaltybuffer if ( equal hills 4 ) then 10 else 5   # 5 is trekking default
-assign   elevationmaxbuffer     if ( equal hills 4 ) then 20 else 10  # 10 is trekking default
-assign   elevationbufferreduce  if ( equal hills 4 ) then 0.0 else ( multiply 0.333 max uphillcutoff downhillcutoff ) # 0.0 is trekking default
+assign   elevationpenaltybuffer if ValleyMode then 10 else 5   # 5 is trekking default
+assign   elevationmaxbuffer     if ValleyMode then 20 else 10  # 10 is trekking default
+assign   elevationbufferreduce  if ValleyMode then 0.0 else ( multiply 0.333 max uphillcutoff downhillcutoff ) # 0.0 is trekking default
 
 assign   uphillCFshift     0.0 # experimental shifting of up/downhillcostfactors as alternative way of 
 assign   downhillCFshift   0.0 # prioritizing/penalizing of up/downhills, based on length, not elevation
@@ -464,11 +463,11 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
   assign costfactor    if isCFgt9997 then rawcostfactor2   else add access-penalty add Flat_Penalty max 1.0 rawcostfactor2
       
   assign uphillcostfactor   if or not UDcostON isCFgt9997 then costfactor else
-    add access-penalty max 1.0 if ( equal hills 4 ) then ( multiply rawcostfactor2 valley_nonflat_multiplier )
+    add access-penalty max 1.0 if ValleyMode  then ( multiply rawcostfactor2 valley_nonflat_multiplier )
     else  add uphillCFshift add rawcostfactor2 switch ismainroad ( multiply 0.4 sub univ_factor_coef 0.5 ) ( multiply -0.5 univ_factor_coef )
                               
   assign downhillcostfactor if or not UDcostON isCFgt9997 then costfactor else
-    add access-penalty max 1.0 if ( equal hills 4 ) then ( multiply rawcostfactor2 valley_nonflat_multiplier )
+    add access-penalty max 1.0 if ValleyMode  then ( multiply rawcostfactor2 valley_nonflat_multiplier )
                                        else  add downhillCFshift add rawcostfactor2 multiply -0.2 univ_factor_coef
                          
 # bend /costfactors
