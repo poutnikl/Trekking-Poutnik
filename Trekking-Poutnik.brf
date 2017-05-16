@@ -21,6 +21,8 @@ assign   hills                  1 # 1=default / 0=BRouter default/ 1=+ penalty f
                                   # 4=valley mode, 5=No-Flats mode
 assign   isbike_for_mainroads   true # default=true / if false then bike friendly tag hints for mainroads are ignored, keeping their high penalties. v2.5.20
 assign   path_preference        0.0 # 0.0 as default, try 20.0 to penalize nonpath ways a/o paved ways
+assign   UnifactorAdjust        0.0 # 0.0 as default, Use value let says -0.75..+0.75. Indirectly defines a type of a road within  univ_factor_coef_raw  
+                                    # that is taken as neutral by MTB_factor and optimal by smallpaved_factor, 
 
 assign   consider_elevation     1 # 1 as default
 assign   consider_smoothness    1 # 1 as default
@@ -40,6 +42,7 @@ assign   allow_default_barrier_restriction  false # If true, default access for 
 assign   NoFlatMode             equal hills 5
 assign   ValleyMode             equal hills 4
 assign   originalisbike         false
+
 
 assign   uphillcostvalue        switch equal hills 1 70   switch equal hills 2 80
                                 switch equal hills 3 60   switch ValleyMode 150 switch NoFlatMode 0     0 
@@ -291,7 +294,7 @@ assign roughness_penalty max smoothness_penalty max mtb_scale_penalty  ( if ford
 
 assign rough_coef = add 1.0 ( multiply 0.33 roughness_penalty ) 
 
-assign univ_factor_coef 
+assign univ_factor_coef_raw 
     switch  highway=motorway|motorway_link|trunk|trunk_link 1.0 switch highway=primary|primary_link   0.9
     switch  highway=secondary|secondary_link                0.7 switch highway=tertiary|tertiary_link 0.4
     switch  highway=unclassified                            0.25 
@@ -304,6 +307,12 @@ assign univ_factor_coef
         switch surface=compacted|fine_gravel -0.25 switch surface=cobblestone|sett  -0.4
         switch surface=ground|mud|dirt       -0.6  switch surface=grass|sand        -0.6   
         switch surface=gravel|pebblestone    -0.75   -0.6
+        
+assign abs_univ_factor_coef_raw  multiply univ_factor_coef_raw  switch ( lesser univ_factor_coef_raw 0.0 ) -1.0 1.0      
+
+assign univ_factor_coef 
+    if equal UnifactorAdjust 0.0 then  univ_factor_coef_raw 
+                                 else  add univ_factor_coef_raw  multiply ( sub  1.0 abs_univ_factor_coef_raw ) UnifactorAdjust
 
 assign nonpath_penalty = 
     if    equal path_preference 0.0    then 0.0 # nonpath_penalty inactive
