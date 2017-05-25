@@ -1,5 +1,5 @@
 # Poutnik's Trekking profile template for Trekking profile variants
-# Version 2.6.* new max cost system
+# Version 2.6.*  -  Univ factor adjust system
 #
 # *)  = See also https://github.com/poutnikl/Brouter-profiles/wiki 
 # **) = See also https://github.com/poutnikl/Trekking-Poutnik/wiki
@@ -310,7 +310,7 @@ assign univ_factor_coef_raw
         
 assign univ_factor_coef 
     if equal UnifactorAdjust 0.0 then  univ_factor_coef_raw 
-                                 else  add univ_factor_coef_raw  multiply ( sub  1.0 ( multiply univ_factor_coef_raw  univ_factor_coef_raw ) ) UnifactorAdjust
+                                 else  add univ_factor_coef_raw  multiply ( max -1.0 min 1.0 sub  1.0 ( multiply univ_factor_coef_raw  univ_factor_coef_raw ) ) UnifactorAdjust
 
 assign nonpath_penalty = 
     if    equal path_preference 0.0    then 0.0 # nonpath_penalty inactive
