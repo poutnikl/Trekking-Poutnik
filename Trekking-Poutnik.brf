@@ -308,11 +308,9 @@ assign univ_factor_coef_raw
         switch surface=ground|mud|dirt       -0.6  switch surface=grass|sand        -0.6   
         switch surface=gravel|pebblestone    -0.75   -0.6
         
-assign abs_univ_factor_coef_raw  multiply univ_factor_coef_raw  switch ( lesser univ_factor_coef_raw 0.0 ) -1.0 1.0      
-
 assign univ_factor_coef 
     if equal UnifactorAdjust 0.0 then  univ_factor_coef_raw 
-                                 else  add univ_factor_coef_raw  multiply ( sub  1.0 abs_univ_factor_coef_raw ) UnifactorAdjust
+                                 else  add univ_factor_coef_raw  multiply ( sub  1.0 ( multiply univ_factor_coef_raw  univ_factor_coef_raw ) ) UnifactorAdjust
 
 assign nonpath_penalty = 
     if    equal path_preference 0.0    then 0.0 # nonpath_penalty inactive
