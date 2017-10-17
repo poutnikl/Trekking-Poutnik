@@ -20,7 +20,7 @@ assign   avoid_unsafe           0 # 0 as default, gives penalty to mainroad with
 assign   hills                  1 # 1=default / 0=BRouter default/ 1=+ penalty for uphills >3.0%/ 2=velomobile-like avoiding slopes, 3= simulates ascend/length time equiv.
                                   # 4=valley mode, 5=No-Flats mode
 assign   isbike_for_mainroads   true # default=true / if false then bike friendly tag hints for mainroads are ignored, keeping their high penalties. v2.5.20
-assign   path_preference        0.0 # 0.0 as default, try 20.0 to penalize nonpath ways a/o paved ways
+assign   path_preference        0.0 # 0.0 as default, try 20.0 to progressively ( better is worse ) penalize anything better than unpaved paths.( for MTB only )
 assign   UnifactorAdjust        0.0 # 0.0 as default, Use value let says -0.75..+0.75. Indirectly defines a type of a road within  univ_factor_coef_raw  
                                     # that is taken as neutral by MTB_factor and optimal by smallpaved_factor, 
 
