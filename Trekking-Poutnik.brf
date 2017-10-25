@@ -28,6 +28,9 @@ assign   allow_steps            1 # 1 as default
 assign   allow_ferries          1 # 1 as default
 assign   allow_traffic_penalty  1 # 1 as default
                                                               
+assign   allow_cycle_barrier 1 # a cycle barrier has no effect with the default value 1 (usually ok for normal bikes)
+                               # See pushpenalty, haulpenalty, dismountpenalty
+                                                              
 assign   StrictNOBicycleaccess          0 # 0 allows but penalizes foot only access / 1 forbides foot only access.
 assign   valley_nonflat_multiplier = 2.0
 
@@ -40,6 +43,12 @@ assign   allow_default_barrier_restriction  false # If true, default access for 
 assign   NoFlatMode             equal hills 5
 assign   ValleyMode             equal hills 4
 assign   originalisbike         false
+
+assign   pushpenalty 4         # added to the costfactor where cycling is not allowed
+assign   haulpenalty 40        # added to costfactor where the bike needs to be lifted and carried
+                               # (that is on stairs, at cycle barrier if allow_cycle_barrier is 0)
+assign   dismountpenalty 100   # added to initial node cost when forced to get off bike
+
 
 assign   uphillcostvalue        switch equal hills 1 70   switch equal hills 2 80
                                 switch equal hills 3 60   switch ValleyMode 150 switch NoFlatMode 0     0 
@@ -225,12 +234,12 @@ assign footaccess =
 assign accesspenalty =
        if bikeaccess then 0
        else if footaccess then 
-        ( if StrictNOBicycleaccess then 10000 else 4 )
+        ( if StrictNOBicycleaccess then 10000 else pushpenalty )
        else 10000
 
 # handle one-ways. On primary roads, wrong-oneways should be close to forbidden
-# while on other ways we just add 4 to the costfactor
-# making it at least 5, as you are allowed to push your bike.
+# while on other ways we just add pushpenalty (default was 4) to the costfactor
+# as you are allowed to push your bike.
 
 assign badoneway =
        if reversedirection=yes then
@@ -246,7 +255,7 @@ assign onewaypenalty =
          else if highway=primary|primary_link               then 50
          else if highway=secondary|secondary_link           then 30
          else if highway=tertiary|tertiary_link             then 20
-         else 4.0   
+         else pushpenalty
          
        else 0.0   
 
@@ -433,7 +442,7 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
   # all other exclusions below (access, steps, ferries,..) should not be deleted by the decoder, to be available in voice-hint-processing
   min 9999 
   
-  switch    highway=steps  switch allow_steps     40 10000
+  switch    highway=steps  switch allow_steps haulpenalty 10000
   switch    route=ferry    switch allow_ferries 5.67 10000
   switch    highway=construction                     10000
   
@@ -551,12 +560,14 @@ assign footaccess =
 
 
 assign initialcost =
-        add ( if highway=traffic_signals then 120 
+        add ( if ( and barrier=cycle_barrier|chicane not allow_cycle_barrier ) then
+                  ( add ( switch bikeaccess dismountpenalty 0 ) haulpenalty )
+              else if highway=traffic_signals then 120
               else if highway=stop  then 60 
               else if and highway=crossing bicycle=no then 60 
               else if and highway=crossing crossing=no then 300 # workaround affecting road routing
               else if ( ford=yes ) then ford_initialcost_node
               else initial_cost_node )
-            if bikeaccess then 0  else ( if footaccess then 100 else 1000000 )
+            if bikeaccess then 0  else ( if footaccess then dismountpenalty else 1000000 )
 
 # bend /node            
