@@ -24,12 +24,12 @@ assign   path_preference        0.0 # 0.0 as default, try 20.0 to penalize nonpa
 
 assign   consider_elevation     1 # 1 as default
 assign   consider_smoothness    1 # 1 as default
-assign   allow_steps            1 # 1 as default
+assign   allow_steps            1 # 1 as default, see haulpenalty
 assign   allow_ferries          1 # 1 as default
 assign   allow_traffic_penalty  1 # 1 as default
                                                               
-assign   allow_cycle_barrier 1 # a cycle barrier has no effect with the default value 1 (usually ok for normal bikes)
-                               # See pushpenalty, haulpenalty, dismountpenalty
+assign   ignore_cycle_barrier 1 # a cycle barrier has no effect with the default value 1 (usually ok for normal bikes)
+                                # See pushpenalty, haulpenalty, dismountpenalty
                                                               
 assign   StrictNOBicycleaccess          0 # 0 allows but penalizes foot only access / 1 forbides foot only access.
 assign   valley_nonflat_multiplier = 2.0
@@ -46,7 +46,7 @@ assign   originalisbike         false
 
 assign   pushpenalty 4         # added to the costfactor where cycling is not allowed
 assign   haulpenalty 40        # added to costfactor where the bike needs to be lifted and carried
-                               # (that is on stairs, at cycle barrier if allow_cycle_barrier is 0)
+                               # (that is on stairs, and at cycle barriers unless thy are ignored)
 assign   dismountpenalty 100   # added to initial node cost when forced to get off bike
 
 
@@ -560,7 +560,7 @@ assign footaccess =
 
 
 assign initialcost =
-        add ( if ( and barrier=cycle_barrier|chicane not allow_cycle_barrier ) then
+        add ( if ( and barrier=cycle_barrier|chicane not ignore_cycle_barrier ) then
                   ( add ( switch bikeaccess dismountpenalty 0 ) haulpenalty )
               else if highway=traffic_signals then 120
               else if highway=stop  then 60 
