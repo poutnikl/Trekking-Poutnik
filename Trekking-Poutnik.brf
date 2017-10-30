@@ -182,36 +182,6 @@ assign issoft not or nosurface ishard
 
 # bend /wayvariables
 
-
-# bstart /initialcost                      
-assign initialclassifier
-if route=ferry then 1
-else if ( ford=yes )                             then 15
-else if ( highway=motorway|motorway_link )       then 2
-else if ( highway=trunk|trunk_link )             then 3
-else if ( highway=primary|primary_link )         then 4
-else if ( highway=secondary|secondary_link )     then 5
-else if ( highway=tertiary|tertiary_link )       then 6
-else if ( highway=unclassified )                 then 7
-else if ( highway=residential   )                then 8
-else if ( highway=living_street  )               then 9
-else if ( highway=service   )                    then 10
-else if ( highway=footway   )                    then 11
-else if ( istrack )                              then 12
-else if    ( highway=cycleway )                  then 13
-                                                 else 14
-
-assign initialcost
-if route=ferry then 10000
-else if  ( ford=yes )                                       then ford_initialcost_way  
-else if ( highway=motorway|motorway_link|trunk|trunk_link ) then 500
-else if ( highway=primary|primary_link )                    then 120
-else if ( highway=secondary|secondary_link )                then 80
-else if ( highway=tertiary|tertiary_link|unclassified )     then 50
-else 30
-
-# bend /initialcost                      
-
 # bstart /wayaccess
 
 assign defaultaccess =
@@ -260,6 +230,39 @@ assign onewaypenalty =
        else 0.0   
 
 # bend /wayaccess
+
+
+# bstart /initialcost                      
+assign initialclassifier
+if route=ferry then 1
+else if not bikeaccess                           then 16
+else if ( ford=yes )                             then 15
+else if ( highway=motorway|motorway_link )       then 2
+else if ( highway=trunk|trunk_link )             then 3
+else if ( highway=primary|primary_link )         then 4
+else if ( highway=secondary|secondary_link )     then 5
+else if ( highway=tertiary|tertiary_link )       then 6
+else if ( highway=unclassified )                 then 7
+else if ( highway=residential   )                then 8
+else if ( highway=living_street  )               then 9
+else if ( highway=service   )                    then 10
+else if ( highway=footway   )                    then 11
+else if ( istrack )                              then 12
+else if    ( highway=cycleway )                  then 13
+                                                 else 14
+
+assign initialcost
+if route=ferry then 10000
+else add ( switch bikeaccess 0 dismountpenalty )
+if      ( ford=yes )                                        then ford_initialcost_way  
+else if ( highway=motorway|motorway_link|trunk|trunk_link ) then 500
+else if ( highway=primary|primary_link )                    then 120
+else if ( highway=secondary|secondary_link )                then 80
+else if ( highway=tertiary|tertiary_link|unclassified )     then 50
+else 30
+
+# bend /initialcost                      
+
 
 # bstart /roadmaxpenalties
 
@@ -486,7 +489,7 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
 # way priorities used for voice hint generation
 
 assign priorityclassifier = (
-
+  
   if      ( highway=motorway                  ) then  30
   else if ( highway=motorway_link             ) then  29
   else if ( highway=trunk                     ) then  28
