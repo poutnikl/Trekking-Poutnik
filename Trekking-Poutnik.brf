@@ -253,9 +253,9 @@ else if    ( highway=cycleway )                  then 13
 
 assign initialcost
 if route=ferry then 10000
+else if ( ford=yes )                                        then ford_initialcost_way  
 else add ( switch bikeaccess 0 dismountpenalty )
-if      ( ford=yes )                                        then ford_initialcost_way  
-else if ( highway=motorway|motorway_link|trunk|trunk_link ) then 500
+     if ( highway=motorway|motorway_link|trunk|trunk_link ) then 500
 else if ( highway=primary|primary_link )                    then 120
 else if ( highway=secondary|secondary_link )                then 80
 else if ( highway=tertiary|tertiary_link|unclassified )     then 50
