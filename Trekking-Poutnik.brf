@@ -43,7 +43,7 @@ assign   ignore_cycle_barrier 1 # a cycle barrier has no effect with the default
 
 assign   pushpenalty            switch tandem_mode 6   4   # added to the costfactor where cycling is not allowed
 assign   dismountpenalty        switch tandem_mode 250 100 # added to initialcost of a way or node when forced to get off bike
-assign   haulpenalty            switch tandem_mode 100 40  # added to costfactor where the bike needs to be lifted and carried
+assign   haulpenalty            switch tandem_mode 500 40  # added to costfactor where the bike needs to be lifted and carried
 
 #new in 2.5.12
 
