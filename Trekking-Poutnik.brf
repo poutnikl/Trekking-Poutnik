@@ -21,6 +21,7 @@ assign   hills                  1 # 1=default / 0=BRouter default/ 1=+ penalty f
                                   # 4=valley mode, 5=No-Flats mode
 assign   isbike_for_mainroads   true # default=true / if false then bike friendly tag hints for mainroads are ignored, keeping their high penalties. v2.5.20
 assign   path_preference        0.0 # 0.0 as default, try 20.0 to penalize nonpath ways a/o paved ways
+assign   tandem_mode            0 # 0 as default, changing it increases pushpenalty, haulpenalty, dismountpenalty below
 
 assign   consider_elevation     1 # 1 as default
 assign   consider_smoothness    1 # 1 as default
@@ -28,27 +29,27 @@ assign   allow_steps            1 # 1 as default, see haulpenalty
 assign   allow_ferries          1 # 1 as default
 assign   allow_traffic_penalty  1 # 1 as default
                                                               
-assign   ignore_cycle_barrier 1 # a cycle barrier has no effect with the default value 1 (usually ok for normal bikes)
-                                # See pushpenalty, haulpenalty, dismountpenalty
                                                               
 assign   StrictNOBicycleaccess          0 # 0 allows but penalizes foot only access / 1 forbides foot only access.
 assign   valley_nonflat_multiplier = 2.0
 
 assign   allow_default_barrier_restriction  false # If true, default access for barrier=gate is false. see node context
+assign   ignore_cycle_barrier 1 # a cycle barrier has no effect with the default value 1 (usually ok for normal bikes)
 
 # Internal parameters - not intended to be tweaked by end users, unless they know what they are doing.
+
+
+# refactored for tandem profile generation
+
+assign   pushpenalty            switch tandem_mode 6   4   # added to the costfactor where cycling is not allowed
+assign   dismountpenalty        switch tandem_mode 250 100 # added to initialcost of a way or node when forced to get off bike
+assign   haulpenalty            switch tandem_mode 100 40  # added to costfactor where the bike needs to be lifted and carried
 
 #new in 2.5.12
 
 assign   NoFlatMode             equal hills 5
 assign   ValleyMode             equal hills 4
 assign   originalisbike         false
-
-assign   pushpenalty 4         # added to the costfactor where cycling is not allowed
-assign   haulpenalty 40        # added to costfactor where the bike needs to be lifted and carried
-                               # (that is on stairs, and at cycle barriers unless thy are ignored)
-assign   dismountpenalty 100   # added to initial node cost when forced to get off bike
-
 
 assign   uphillcostvalue        switch equal hills 1 70   switch equal hills 2 80
                                 switch equal hills 3 60   switch ValleyMode 150 switch NoFlatMode 0     0 
