@@ -489,7 +489,7 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
 
 # way priorities used for voice hint generation
 
-assign priorityclassifier = (
+assign priorityclassifier =
 
   if      ( highway=motorway                  ) then  30
   else if ( highway=motorway_link             ) then  29
@@ -502,16 +502,15 @@ assign priorityclassifier = (
   else if ( highway=tertiary                  ) then  22
   else if ( highway=tertiary_link             ) then  21
   else if ( highway=unclassified              ) then  20
-  else if ( highway=residential|living_street ) then  16
-  else if ( highway=service                   ) then  14
-  else if ( tracktype=grade1                  ) then  6
+  else if ( highway=residential|living_street ) then  6
+  else if ( highway=service                   ) then  6
   else if ( highway=cycleway                  ) then  6
   else if ( bicycle=designated                ) then  6
-  else if ( highway=bridleway                 ) then  4
-  else if ( highway=track|road|footway        ) then  4
-  else if ( highway=steps|path|pedestrian     ) then  2
+  else if ( highway=track                     ) then if tracktype=grade1 then 6 else 4
+  else if ( highway=bridleway|road|path|footway ) then  4
+  else if ( highway=steps                     ) then  2
+  else if ( highway=pedestrian                ) then  2
   else 0
-  )
                                                       
 # some more classifying bits used for voice hint generation...
 
