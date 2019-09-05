@@ -1,5 +1,6 @@
 # Poutnik's Trekking profile template for Trekking profile variants
 # Version 2.7.*  -  Univ factor adjust system
+#                -  Changed to linear function
 #
 # *)  = See also https://github.com/poutnikl/Brouter-profiles/wiki 
 # **) = See also https://github.com/poutnikl/Trekking-Poutnik/wiki
@@ -21,14 +22,13 @@ assign   hills                  1 # 1=default / 0=BRouter default/ 1=+ penalty f
                                   # 4=valley mode, 5=No-Flats mode
 assign   isbike_for_mainroads   true # default=true / if false then bike friendly tag hints for mainroads are ignored, keeping their high penalties. v2.5.20
 assign   path_preference        0.0 # 0.0 as default, try 20.0 to progressively ( better is worse ) penalize anything better than unpaved paths.( for MTB only )
+
+# Indirectly defines a type of a road within  univ_factor_coef_raw that is taken as neutral by MTB_factor and optimal by smallpaved_factor.
+# It shifts neutral univ_factor_coef=0 to value UnifactorAdjust so 
+# if univ_factor_coef>0 then MTB like ways progressively become "MTB factor neutral" and "smallroad factor optimal".
+# if univ_factor_coef<0 then major road like ways become "MTB factor neutral" and "smallroad factor optimal".
+
 assign   UnifactorAdjust        0.0 # 0.0 as default, Use value let says -0.75..+0.75. 
-                                    # Indirectly defines a type of a road within  univ_factor_coef_raw  
-                                    # that is taken as neutral by MTB_factor and optimal by smallpaved_factor.
-                                    # It shifts neutral univ_factor_coef=0 to value UnifactorAdjust so 
-                                    # if univ_factor_coef>0
-                                    # then MTB like ways progressively become "MTB factor neutral" and "smallroad factor optimal".
-                                    # if univ_factor_coef<0
-                                    # then major road like ways become "MTB factor neutral" and "smallroad factor optimal".
 
 assign   consider_elevation     1 # 1 as default
 assign   consider_smoothness    1 # 1 as default
@@ -41,7 +41,12 @@ assign   valley_nonflat_multiplier = 2.0
 
 assign   allow_default_barrier_restriction  false # If true, default access for barrier=gate is false. see node context
 
+# ----------------------------------------------------------------------------------------------------
 # Internal parameters - not intended to be tweaked by end users, unless they know what they are doing.
+
+# new in 2.7
+assign    debug      false 
+assign    debugcost  5.0
 
 #new in 2.5.12
 
@@ -49,6 +54,8 @@ assign   NoFlatMode             equal hills 5
 assign   ValleyMode             equal hills 4
 assign   originalisbike         false
 
+# Do not confuse these profile internals
+# with BRouter parameters without the "value".
 
 assign   uphillcostvalue        switch equal hills 1 70   switch equal hills 2 80
                                 switch equal hills 3 60   switch ValleyMode 150 switch NoFlatMode 0     0 
@@ -301,35 +308,77 @@ assign roughness_penalty max smoothness_penalty max mtb_scale_penalty  ( if ford
 assign rough_coef = add 1.0 ( multiply 0.33 roughness_penalty ) 
 
 assign univ_factor_coef_raw 
-    switch  highway=motorway|motorway_link|trunk|trunk_link 1.0 switch highway=primary|primary_link   0.9
-    switch  highway=secondary|secondary_link                0.7 switch highway=tertiary|tertiary_link 0.4
-    switch  highway=unclassified                            0.25 
-    switch  or not istrack highway=footway                  ( switch ispaved 0.25 switch isunpaved -0.25 0.0 )
-    switch  or ispaved tracktype=grade1                     0.1
+    switch highway=motorway|motorway_link|trunk|trunk_link 1.0
+    switch highway=primary|primary_link                    0.9
+    switch highway=secondary|secondary_link                0.7
+    switch highway=tertiary|tertiary_link                  0.4
+    switch  highway=unclassified                           0.25 
+    switch  or not istrack highway=footway
+            ( switch ispaved 0.25 switch isunpaved -0.25 0.0 )
+    switch  or ispaved tracktype=grade1                    0.1
     multiply rough_coef    
     add ( switch  highway=path -0.25 0.0 )
         switch ( nosurfacenortracktype ) ( switch isbike 0.0 -0.25 )
-        switch nosurface  ( switch or isbike tracktype=grade2|grade3 -0.25 -0.5 )
-        switch surface=compacted|fine_gravel -0.25 switch surface=cobblestone|sett  -0.4
-        switch surface=ground|mud|dirt       -0.6  switch surface=grass|sand        -0.6   
-        switch surface=gravel|pebblestone    -0.75   -0.6
-        
+        switch nosurface  
+           ( switch or isbike tracktype=grade2|grade3 -0.25 -0.5 )
+        switch surface=compacted|fine_gravel -0.25
+        switch surface=cobblestone|sett      -0.4
+        switch surface=ground|mud|dirt       -0.6
+        switch surface=grass|sand            -0.6   
+        switch surface=gravel|pebblestone    -0.75
+        -0.6
+
+# UCF = UCFR + UFA - UFA * UCF * UCF
+
 assign univ_factor_coef 
-    if equal UnifactorAdjust 0.0 then  univ_factor_coef_raw 
-                                 else  add univ_factor_coef_raw  multiply ( max -1.0 min 1.0 sub  1.0 ( multiply univ_factor_coef_raw  univ_factor_coef_raw ) ) UnifactorAdjust
+    if equal UnifactorAdjust 0.0 then
+      univ_factor_coef_raw 
+    else
+      sub add univ_factor_coef_raw
+              UnifactorAdjust
+          multiply UnifactorAdjust
+                   multiply univ_factor_coef_raw
+                            univ_factor_coef_raw
+          
 
 assign nonpath_penalty = 
     if    equal path_preference 0.0    then 0.0 # nonpath_penalty inactive
     else  multiply ( max 0 path_preference )
-        if ismainroad    then 1    else if not or istrack highway=cycleway  then 0.6
-        else if ispaved  then 0.4  else if or not highway=path or not isunpaved  tracktype=grade1|grade2 then 0.25 
-        else if or not isunpaved or not highway=path  or not tracktype=grade3|grade4|grade5
-            surface=gravel|cobblestone|pebblestone    then 0.15  else 0.0
+        if ismainroad    then 1    
+        else if not or istrack highway=cycleway  then 0.6
+        else if ispaved  then 0.4  
+        else if or not highway=path 
+                or not isunpaved  tracktype=grade1|grade2 
+                   then 0.25 
+        else if or not isunpaved 
+                or not highway=path
+                or not tracktype=grade3|grade4|grade5  surface=gravel|cobblestone|pebblestone    
+                  then 0.15
+        else 0.0
 
-assign MTB_factor_for_road if  ( equal MTB_factor 0.0 ) then 0.0 else multiply MTB_factor  univ_factor_coef
-assign abs_univ_factor     if lesser univ_factor_coef 0.0 then multiply -1.0 univ_factor_coef   else univ_factor_coef 
-assign smallpaved_factor_for_road if  ( equal smallpaved_factor 0.0 ) then 0.0 
-                                  else multiply abs_smallpaved_factor ( if  positive_smallpaved_factor then abs_univ_factor  else  ( sub 1.0 abs_univ_factor )  )
+assign MTB_factor_for_road
+    if  ( equal MTB_factor 0.0 ) then 
+       0.0
+    else
+       multiply MTB_factor  univ_factor_coef
+
+assign abs_univ_factor
+    if lesser univ_factor_coef 0.0 then
+        multiply -1.0 univ_factor_coef
+    else
+        univ_factor_coef 
+
+assign smallpaved_factor_for_road
+    if  ( equal smallpaved_factor 0.0 )
+       then 0.0 
+       else multiply
+           abs_smallpaved_factor
+           ( if  positive_smallpaved_factor then
+               abs_univ_factor
+           else
+              ( sub 1.0 abs_univ_factor )  
+           )
+
 # bend /MTB_SP_tweaks                                             
                                              
 # bstart /HWclass_bfactor_components
@@ -453,35 +502,84 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
   add highwayclass_basefactor   add not_isbike_penalty   add unsafe_penalty   max penaltymax   nonpath_penalty
  )  
 
-  assign isCFgt9997       greater rawcostfactor 9997
+assign isCFgt9997       greater rawcostfactor 9997
   
-  assign LDCRboost  multiply sub 1.0 rawcostfactor    cycleroutes_pref
-  assign cycleroute_tweak 
+assign LDCRboost  multiply sub 1.0 rawcostfactor    cycleroutes_pref
+
+assign cycleroute_tweak 
   #2.6 reworked : non cyclenetwork penalty = + cycleroutes_pref  ( 0..1 , default 0.2)
   #               ICN boost                = - ( CF - 1 ) * cycleroutes_pref, leading to CF=1.0 for cycleroutes_pref = 1.0
   #               other CN: weitgted average of above, with weights ncncoef, lcncoef shifting with cycleroutes_pref
 
-         if not greater cycleroutes_pref 0.0 then 0.0
-         else if not is_ldcr then cycleroutes_pref
-         else if isicn then LDCRboost
-         else if isncn then add multiply ncncoef cycleroutes_pref     multiply ( sub  1.0 ncncoef ) LDCRboost 
-         else               add multiply lcncoef cycleroutes_pref     multiply ( sub  1.0 lcncoef ) LDCRboost 
+         if not greater cycleroutes_pref 0.0 then
+            0.0
+         else if not is_ldcr then
+           cycleroutes_pref
+         else if isicn then 
+            LDCRboost
+         else if isncn then
+            add multiply ncncoef cycleroutes_pref
+                multiply ( sub  1.0 ncncoef ) LDCRboost 
+         else
+            add multiply lcncoef cycleroutes_pref
+                multiply ( sub  1.0 lcncoef ) LDCRboost 
                                                  
-  # can be <1, adjusted to >=1 in final step of calculation of costfactor, uphillcostfactor,downhillcostfactor                              
-  assign rawcostfactor2  if isCFgt9997 then rawcostfactor
-    else add rawcostfactor add cycleroute_tweak add MTB_factor_for_road smallpaved_factor_for_road   
-    
-  assign access-penalty max onewaypenalty accesspenalty
+  # can be <1, adjusted to >=1 in final step of calculation 
+  # of costfactor, uphillcostfactor,downhillcostfactor                              
 
-  assign costfactor    if isCFgt9997 then rawcostfactor2   else add access-penalty add Flat_Penalty max 1.0 rawcostfactor2
+assign rawcostfactor2
+  if isCFgt9997 then
+    rawcostfactor
+  else 
+    if debug then
+       add debugcost
+       add MTB_factor_for_road
+           smallpaved_factor_for_road 
+    else
+      add rawcostfactor 
+      add cycleroute_tweak 
+      add MTB_factor_for_road
+      smallpaved_factor_for_road   
+    
+assign access-penalty max onewaypenalty accesspenalty
+
+assign costfactor    
+  if isCFgt9997 then
+    rawcostfactor2
+  else
+    add access-penalty 
+    add Flat_Penalty 
+        max 1.0 rawcostfactor2
       
-  assign uphillcostfactor   if or not UDcostON isCFgt9997 then costfactor else
-    add access-penalty max 1.0 if ValleyMode  then ( multiply rawcostfactor2 valley_nonflat_multiplier )
-    else  add uphillCFshift add rawcostfactor2 switch ismainroad ( multiply 0.4 sub univ_factor_coef 0.5 ) ( multiply -0.5 univ_factor_coef )
+assign uphillcostfactor
+  if debug then costfactor else
+  if or not UDcostON isCFgt9997 then 
+     costfactor
+  else
+     add access-penalty
+         max 1.0 
+             if ValleyMode  then
+               ( multiply rawcostfactor2 valley_nonflat_multiplier )
+             else
+               add uphillCFshift
+               add rawcostfactor2
+                   switch ismainroad
+                      ( multiply 0.4 sub univ_factor_coef 0.5 ) 
+                      ( multiply -0.5 univ_factor_coef )
                               
-  assign downhillcostfactor if or not UDcostON isCFgt9997 then costfactor else
-    add access-penalty max 1.0 if ValleyMode  then ( multiply rawcostfactor2 valley_nonflat_multiplier )
-                                       else  add downhillCFshift add rawcostfactor2 multiply -0.2 univ_factor_coef
+ assign downhillcostfactor
+   if debug then costfactor else
+   if or not UDcostON isCFgt9997 then 
+     costfactor
+   else
+     add access-penalty
+         max 1.0 
+             if ValleyMode  then
+                ( multiply rawcostfactor2 valley_nonflat_multiplier )
+             else
+                add downhillCFshift
+                add rawcostfactor2
+                    multiply -0.2 univ_factor_coef
                          
 # bend /costfactors
 
