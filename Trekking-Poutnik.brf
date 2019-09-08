@@ -14,6 +14,9 @@
 ---context:global
 assign   is_wet                  0 # %is_wet% Wet_conditions
                                    # 0 as default, *) flag for weather conditions
+assign   avoid_unpaved           0 # %avoid_unpaved%
+                                  
+                                   
 assign   turnInstructionMode  = 1 # 0=none, 1=auto-choose, 2=locus-style, 3=osmand-style
 assign   cycleroutes_pref       0.2 # also CRP *)  costfactor penalty for not being cycleroute
 assign   MTB_factor             0.0 # default 0.0, *)
@@ -500,7 +503,12 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
   switch    route=ferry    switch allow_ferries 5.67 10000
   switch    highway=construction                     10000
   
-  add highwayclass_basefactor   add not_isbike_penalty   add unsafe_penalty   max penaltymax   nonpath_penalty
+  if and avoid_unpaved isunpaved then 50
+  else add highwayclass_basefactor
+       add not_isbike_penalty
+       add unsafe_penalty
+           max penaltymax
+               nonpath_penalty
  )  
 
 assign isCFgt9997       greater rawcostfactor 9997
