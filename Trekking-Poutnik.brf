@@ -11,7 +11,8 @@
 
 # bstart /global
 ---context:global
-assign   iswet                  0 # 0 as default, *) flag for weather conditions
+assign   is_wet                  0 # %is_wet% Wet_conditions
+                                 # 0 as default, *) flag for weather conditions
 assign   turnInstructionMode  = 1 # 0=none, 1=auto-choose, 2=locus-style, 3=osmand-style
 assign   cycleroutes_pref       0.2 # also CRP *)  costfactor penalty for not being cycleroute
 assign   MTB_factor             0.0 # default 0.0, *)
@@ -172,7 +173,7 @@ assign probablyGood or ispaved  and isbike not isunpaved  #probably good surface
 assign turncost  if  ismainroad  then 90    else if ispaved then 60   else 30 
 # Turn cost is based solely on estimation of road speediness and eventual time cost of turning, partially promoting tracks )
 
-assign ismuddy and iswet
+assign ismuddy and is_wet
                and ( not surface=gravel|pebblestone )  # ***)
                    ( or isunpaved ( and surface= and highway=track|path not tracktype=grade1 )  )
 
@@ -380,7 +381,7 @@ assign not_isbike_penalty   if isbike then 0.0
         switch    highway=cycleway   0.0   switch    highway=residential|living_street 0.0
         switch    highway=service    0.0   0.0
 
-assign wet_penalty    if   not iswet    then 0.0 else
+assign wet_penalty    if   not is_wet    then 0.0 else
     switch surface=cobblestone|sett     1.0     switch ispaved                      0.0
     switch surface=compacted            0.6     switch surface=fine_gravel          0.8
     switch surface=                     switch not istrack 0.5 switch highway=path  2.0 1.0 
@@ -396,7 +397,7 @@ assign wet_penalty    if   not iswet    then 0.0 else
 # Penalty for unsafe roads. As wet fallback, it does not so strictly avoid unsafe
 assign unsafe_penalty  
     if and avoid_unsafe and ismainroad not isbike 
-       then multiply unsafe_penalty_value  ( if iswet then  0.5 else 1.0 )  
+       then multiply unsafe_penalty_value  ( if is_wet then  0.5 else 1.0 )  
        else 0.0  
 
 
