@@ -11,7 +11,7 @@
 
 # bstart /global
 ---context:global
-assign   is_wet                  0 # %is_wet% Wet_conditions
+assign   is_wet                  0 # %is_wet% | Wet_conditions | boolean
                                  # 0 as default, *) flag for weather conditions
 assign   turnInstructionMode  = 1 # 0=none, 1=auto-choose, 2=locus-style, 3=osmand-style
 assign   cycleroutes_pref       0.2 # also CRP *)  costfactor penalty for not being cycleroute
