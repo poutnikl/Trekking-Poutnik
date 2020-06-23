@@ -2,9 +2,11 @@
 # Version 2.7.*  -  Univ factor adjust system
 #                -  Changed to linear function
 #                -  Merged tandem by Leopold Keller 
+# FEATURE NotSteep
 #
 # *)  = See also https://github.com/poutnikl/Brouter-profiles/wiki 
 # **) = See also https://github.com/poutnikl/Trekking-Poutnik/wiki
+# ***) = See also https://github.com/poutnikl/Brouter-profiles/wiki/Glossary
 #
 # LEGEND
 #
@@ -24,7 +26,7 @@ assign   MTB_factor             0.0 # default 0.0, *)
 assign   smallpaved_factor      0.0 # default 0.0, *)
 assign   avoid_unsafe           0 # 0 as default, gives penalty to mainroad without bike friendly status.
 assign   hills                  1 # 1=default / 0=BRouter default/ 1=+ penalty for uphills >3.0%/ 2=velomobile-like avoiding slopes, 3= simulates ascend/length time equiv.
-                                  # 4=valley mode, 5=No-Flats mode
+                                  # 4=valley mode, 5=No-Flats mode, 6=Not steep mode
 assign   isbike_for_mainroads   true # default=true / if false then bike friendly tag hints for mainroads are ignored, keeping their high penalties. v2.5.20
 assign   path_preference        0.0 # 0.0 as default, try 20.0 to progressively ( better is worse ) penalize anything better than unpaved paths.( for MTB only )
 
@@ -35,6 +37,24 @@ assign   path_preference        0.0 # 0.0 as default, try 20.0 to progressively 
 
 assign   UnifactorAdjust        0.0 # 0.0 as default, Use value let says -0.75..+0.75. 
 assign   tandem_mode            0 # 0 as default, changing it increases pushpenalty, haulpenalty, dismountpenalty below
+
+# # new in 2.8
+# BEGIN  - Internal parareters for hills = 6 - experimental avoiding of too steep hills 
+# via strongly penalizing uphillcostfactor
+# ***) = See also https://github.com/poutnikl/Brouter-profiles/wiki/Glossary
+
+assign   TooSteepUphill         6.0  # slope below this uphill limit ( % ) has no penalization
+assign   TooSteepbufferreduce   7.0  # The width of the uphill scope transient zone                                        
+
+assign   TooSteepUphillCost     0.0  # can be used optionally, but is rather overrun by the uphillcostfactor. 
+
+assign   TooSteepCostFactor     200 # for uphill scope > TooSteepUphill + TooSteepbufferreduce                                     
+                                    # with the transient zone TooSteepUphill .. TooSteepUphill + TooSteepbufferreduce
+                                    
+assign   TooSteepPenaltybuffer  12.0 # higher than default 5 to filter SRTM artefacts
+assign   TooSteepMaxbuffer      20.0 # higher than default 10 to filter SRTM artefacts
+
+# END  - Internal parareters for hills = 6 - experimental avoiding of too steep hills via strongly penalizing uphillcostfactor
 
 assign   consider_elevation     1 # 1 as default
 assign   consider_smoothness    1 # 1 as default
@@ -51,7 +71,7 @@ assign   ignore_cycle_barrier 1 # a cycle barrier has no effect with the default
 
 # ----------------------------------------------------------------------------------------------------
 # Internal parameters - not intended to be tweaked by end users, unless they know what they are doing.
-
+#
 # new in 2.7
 assign    debug      false 
 assign    debugcost  5.0
@@ -66,19 +86,28 @@ assign   haulpenalty            switch tandem_mode 500 40  # added to costfactor
 
 assign   NoFlatMode             equal hills 5
 assign   ValleyMode             equal hills 4
+assign   TooSteepMode           equal hills 6 #v2.8
 assign   originalisbike         false
 
 # Do not confuse these profile internals
 # with BRouter parameters without the "value".
 
 assign   uphillcostvalue        switch equal hills 1 70   switch equal hills 2 80
-                                switch equal hills 3 60   switch ValleyMode 150 switch NoFlatMode 0     0 
+                                switch equal hills 3 60   switch ValleyMode 150 
+                                switch NoFlatMode 0       switch TooSteepMode TooSteepUphillCost
+                                0 
 assign   uphillcutoffvalue      switch equal hills 1 3.0  switch equal hills 2 1.0
-                                switch equal hills 3 0.5  switch ValleyMode 1.5 switch NoFlatMode 1.5   1.5 
+                                switch equal hills 3 0.5  switch ValleyMode 1.5
+                                switch NoFlatMode 1.5     switch TooSteepMode TooSteepUphill
+                                1.5 
 assign   downhillcutoffvalue    switch equal hills 1 1.5  switch equal hills 2 0.5
-                                switch equal hills 3 1.5  switch ValleyMode 1.5 switch NoFlatMode 1.5  1.5 
+                                switch equal hills 3 1.5  switch ValleyMode 1.5
+                                switch NoFlatMode 1.5     switch TooSteepMode 0.5
+                                1.5 
 assign   downhillcostvalue      switch equal hills 1 60   switch equal hills 2 80
-                                switch equal hills 3 0    switch ValleyMode 150 switch NoFlatMode 0   0  
+                                switch equal hills 3 0    switch ValleyMode 150
+                                switch NoFlatMode 0       switch TooSteepMode 80
+                                0  
 
 assign   Flat_Penalty         if NoFlatMode then 1.5 else 0.0
 
@@ -103,13 +132,23 @@ assign   MTB_hillcostfactor   multiply 0.3333 Hill_factor
                   # Hill_factor 1..-1 leads hillcost to decrease e.g. from 60 to 40 / increase from 60 to 80
                   
 assign   downhillcost if ( consider_elevation  )  then  ( multiply ( sub 1.0 MTB_hillcostfactor  ) downhillcostvalue ) else 0
-assign   uphillcost   if ( consider_elevation  )  then  ( multiply ( sub 1.0 MTB_hillcostfactor  ) uphillcostvalue ) else 0
-assign   uphillcutoff    if ( consider_elevation ) then (  multiply ( max 0.0 min 1.0 add 1.0 MTB_hillcostfactor  ) uphillcutoffvalue )   else 1.5
+assign   uphillcost   if ( consider_elevation  )  then ( 
+             if  TooSteepMode then uphillcostvalue  else ( multiply ( sub 1.0 MTB_hillcostfactor  ) uphillcostvalue ) )
+         else 0
+assign   uphillcutoff    if ( consider_elevation ) then (
+             if  TooSteepMode then uphillcutoffvalue 
+                              else (  multiply ( max 0.0 min 1.0 add 1.0 MTB_hillcostfactor  ) uphillcutoffvalue )   )
+         else 1.5
 assign   downhillcutoff  if ( consider_elevation ) then (  multiply ( max 0.0 min 1.0 add 1.0 MTB_hillcostfactor  ) downhillcutoffvalue ) else 1.5 
 
-assign   elevationpenaltybuffer if ValleyMode then 10 else 5   # 5 is trekking default
-assign   elevationmaxbuffer     if ValleyMode then 20 else 10  # 10 is trekking default
-assign   elevationbufferreduce  if ValleyMode then 0.0 else ( multiply 0.333 max uphillcutoff downhillcutoff ) # 0.0 is trekking default
+assign   elevationpenaltybuffer if ValleyMode then 10 
+                                else if TooSteepMode then TooSteepPenaltybuffer else 5   # 5 is trekking default
+assign   elevationmaxbuffer     if ValleyMode then 20
+                                else if TooSteepMode then TooSteepMaxbuffer
+                                else 10  # 10 is trekking default
+assign   elevationbufferreduce  if ValleyMode then 0.0 
+                                else if TooSteepMode then TooSteepbufferreduce
+                                else ( multiply 0.333 max uphillcutoff downhillcutoff ) # 0.0 is trekking default
 
 assign   uphillCFshift     0.0 # experimental shifting of up/downhillcostfactors as alternative way of 
 assign   downhillCFshift   0.0 # prioritizing/penalizing of up/downhills, based on length, not elevation
@@ -579,7 +618,7 @@ assign uphillcostfactor
      costfactor
   else
      add access-penalty
-         max 1.0 
+         max switch TooSteepMode  TooSteepCostFactor  1.0 
              if ValleyMode  then
                ( multiply rawcostfactor2 valley_nonflat_multiplier )
              else
