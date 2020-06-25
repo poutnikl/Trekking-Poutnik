@@ -5,6 +5,7 @@
 #
 # *)  = See also https://github.com/poutnikl/Brouter-profiles/wiki 
 # **) = See also https://github.com/poutnikl/Trekking-Poutnik/wiki
+# ***)= See https://github.com/poutnikl/Brouter-profiles/wiki/Glossary
 #
 # LEGEND
 #
@@ -13,34 +14,33 @@
 
 # bstart /global
 ---context:global
+
+# Bike profile
+assign validForBikes = true
+
 assign   is_wet                  0 # %is_wet% Wet_conditions
-                                   # 0 as default, *) flag for weather conditions
 assign   avoid_unpaved           0 # %avoid_unpaved%
-                                  
-                                   
-assign   turnInstructionMode  = 1 # 0=none, 1=auto-choose, 2=locus-style, 3=osmand-style
 assign   cycleroutes_pref       0.2 # also CRP *)  costfactor penalty for not being cycleroute
 assign   MTB_factor             0.0 # default 0.0, *)
 assign   smallpaved_factor      0.0 # default 0.0, *)
-assign   avoid_unsafe           0 # 0 as default, gives penalty to mainroad without bike friendly status.
 assign   hills                  1 # 1=default / 0=BRouter default/ 1=+ penalty for uphills >3.0%/ 2=velomobile-like avoiding slopes, 3= simulates ascend/length time equiv.
                                   # 4=valley mode, 5=No-Flats mode
 assign   isbike_for_mainroads   true # default=true / if false then bike friendly tag hints for mainroads are ignored, keeping their high penalties. v2.5.20
-assign   path_preference        0.0 # 0.0 as default, try 20.0 to progressively ( better is worse ) penalize anything better than unpaved paths.( for MTB only )
-
-# Indirectly defines a type of a road within  univ_factor_coef_raw that is taken as neutral by MTB_factor and optimal by smallpaved_factor.
-# It shifts neutral univ_factor_coef=0 to value UnifactorAdjust so 
-# if univ_factor_coef>0 then MTB like ways progressively become "MTB factor neutral" and "smallroad factor optimal".
-# if univ_factor_coef<0 then major road like ways become "MTB factor neutral" and "smallroad factor optimal".
-
+assign   path_preference        0.0 # 0.0 as default, try 0-20, see ***)
 assign   UnifactorAdjust        0.0 # 0.0 as default, Use value let says -0.75..+0.75. 
 assign   tandem_mode            0 # 0 as default, changing it increases pushpenalty, haulpenalty, dismountpenalty below
-
-assign   consider_elevation     1 # 1 as default
 assign   consider_smoothness    1 # 1 as default
-assign   allow_steps            1 # 1 as default, see haulpenalty
-assign   allow_ferries          1 # 1 as default
 assign   allow_traffic_penalty  1 # 1 as default
+
+# Use the following switches to change behaviour
+assign allow_steps              = true   # %allow_steps% | Set to false to disallow steps | boolean
+assign allow_ferries            = true   # %allow_ferries% | set to false to disallow ferries | boolean
+assign avoid_unsafe             = false  # %avoid_unsafe% | Set to true to avoid standard highways | boolean
+assign considerTurnRestrictions = false  # %considerTurnRestrictions% | Set to true to take turn restrictions into account | boolean
+assign processUnusedTags        = false  # %processUnusedTags% | Set to true to output unused tags in data tab | boolean
+
+# Change elevation parameters
+assign consider_elevation = true  # %consider_elevation% | Set to false to ignore elevation in routing | boolean
 
 # Kinematic model parameters (travel time computation)
 assign totalMass  = 90     # %totalMass% | Mass (in kg) of the bike + biker, for travel time computation | number
@@ -48,6 +48,12 @@ assign maxSpeed   = 45     # %maxSpeed% | Absolute maximum speed (in km/h), for 
 assign S_C_x      = 0.225  # %S_C_x% | Drag coefficient times the reference area (in m^2), for travel time computation | number
 assign C_r        = 0.01   # %C_r% | Rolling resistance coefficient (dimensionless), for travel time computation | number
 assign bikerPower = 100    # %bikerPower% | Average power (in W) provided by the biker, for travel time computation | number
+
+# Turn instructions settings
+assign turnInstructionMode          = 1     # %turnInstructionMode% | Mode for the generated turn instructions | [0=none, 1=auto-choose, 2=locus-style, 3=osmand-style]
+assign turnInstructionCatchingRange = 20    # %turnInstructionCatchingRange% | Within this distance (in m) several turning instructions are combined into one and the turning angles are better approximated to the general direction | number
+assign turnInstructionRoundabouts   = true  # %turnInstructionRoundabouts% | Set to "false" to avoid generating special turning instructions for roundabouts | boolean
+
                                                               
 assign   StrictNOBicycleaccess          0 # 0 allows but penalizes foot only access / 1 forbides foot only access.
 assign   valley_nonflat_multiplier = 2.0
@@ -89,8 +95,6 @@ assign   downhillcostvalue      switch equal hills 1 60   switch equal hills 2 8
 assign   Flat_Penalty         if NoFlatMode then 1.5 else 0.0
 
 assign   validForBikes        1
-assign   processUnusedTags    0 # 1 is old Brouter behaviour, 0 is new Brouter default, more efficient, but ignores tags not used by a profile.
-                              
 
 # positive smallpaved factor effect subtracts itself from MTB factor effect
 # on MTB-like OSM way preference and elevation effect attenuation
@@ -124,7 +128,6 @@ assign    pass1coefficient 1.8
 assign    pass2coefficient 0
 
 assign   use_proposed_cn        1 # 0 as default, considers proposed cycle networks as unmarked but valid cycleroutes.
-assign   considerTurnRestrictions = true  #v2.5.11
 
 assign   unsafe_penalty_value 1.0 # 1 - was 2 in Trekking, but this may cause U-like safe routes
 assign   cost_of_unknown      2.0 # 2 as default, cost of highway=
