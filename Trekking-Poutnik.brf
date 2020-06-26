@@ -373,25 +373,31 @@ assign roughness_penalty max smoothness_penalty max mtb_scale_penalty  ( if ford
 assign rough_coef = add 1.0 ( multiply 0.33 roughness_penalty ) 
 
 assign univ_factor_coef_raw 
+    if ismainroad then (
+    add ( switch isunpaved -0.5 0 )
     switch highway=motorway|motorway_link|trunk|trunk_link 1.0
     switch highway=primary|primary_link                    0.9
     switch highway=secondary|secondary_link                0.7
     switch highway=tertiary|tertiary_link                  0.4
     switch  highway=unclassified                           0.25 
-    switch  or not istrack highway=footway
-            ( switch ispaved 0.25 switch isunpaved -0.25 0.0 )
+    0
+    ) else if istrack then (
+    add ( switch  highway=path|footway -0.25 0.0 )
     switch  or ispaved tracktype=grade1                    0.1
     multiply rough_coef    
-    add ( switch  highway=path -0.25 0.0 )
         switch ( nosurfacenortracktype ) ( switch isbike 0.0 -0.25 )
         switch nosurface  
            ( switch or isbike tracktype=grade2|grade3 -0.25 -0.5 )
         switch surface=compacted|fine_gravel -0.25
         switch surface=cobblestone|sett      -0.4
-        switch surface=ground|mud|dirt       -0.6
-        switch surface=grass|sand            -0.6   
-        switch surface=gravel|pebblestone    -0.75
-        -0.6
+        switch surface=ground|grass          -0.5
+        switch surface=sand|dirt             -0.6   
+        switch surface=gravel|pebblestone|mud -0.75
+        -0.6 
+    ) 
+    else 
+    ( switch ispaved 0.25 switch isunpaved -0.25 0.0 )
+
 
 # UCF = UCFR + UFA - UFA * UCF * UCF
 
