@@ -1,8 +1,11 @@
 # Poutnik's Trekking profile template for Trekking profile variants
-# Version 2.7.*  -  Univ factor adjust system
-#                -  Changed to linear function
+# Version 2.7.*  -  Univ factor adjust system, Changed back to quadratic function
 #                -  Merged tandem by Leopold Keller 
-# FEATURE NotSteep
+#                -  Not Too Steep mode  hills=6
+#                -  ported ETA parameters from Trekking.brf
+#                -  ported %parameters% shared with Trekking.brf to be able to use them in BRouter-web dialog.
+#                -  tweaked UnivFactorCoefficient.   
+#                -  Travel_Mode
 #
 # *)  = See also https://github.com/poutnikl/Brouter-profiles/wiki 
 # **) = See also https://github.com/poutnikl/Trekking-Poutnik/wiki
@@ -30,25 +33,13 @@ assign   isbike_for_mainroads   true # default=true / if false then bike friendl
 assign   path_preference        0.0 # 0.0 as default, try 0-20, see ***)
 assign   UnifactorAdjust        0.0 # 0.0 as default, Use value let says -0.75..+0.75. 
 assign   tandem_mode            0 # 0 as default, changing it increases pushpenalty, haulpenalty, dismountpenalty below
-
-# # new in 2.8
-# BEGIN  - Internal parareters for hills = 6 - experimental avoiding of too steep hills 
-# via strongly penalizing uphillcostfactor
-# ***) = See also https://github.com/poutnikl/Brouter-profiles/wiki/Glossary
-
-assign   TooSteepUphill         6.0  # slope below this uphill limit ( % ) has no penalization
-assign   TooSteepbufferreduce   7.0  # The width of the uphill scope transient zone                                        
-
-assign   TooSteepUphillCost     0.0  # can be used optionally, but is rather overrun by the uphillcostfactor. 
-
-assign   TooSteepCostFactor     200 # for uphill scope > TooSteepUphill + TooSteepbufferreduce                                     
-                                    # with the transient zone TooSteepUphill .. TooSteepUphill + TooSteepbufferreduce
-                                    
-assign   TooSteepPenaltybuffer  12.0 # higher than default 5 to filter SRTM artefacts
-assign   TooSteepMaxbuffer      20.0 # higher than default 10 to filter SRTM artefacts
-
-# END  - Internal parareters for hills = 6 - experimental avoiding of too steep hills via strongly penalizing uphillcostfactor
-
+assign   Travel_Mode            0 # 0 as default
+                                  # 1 as hills 2 + 10 kg - 10 W, 
+                                  # 2 as hills 6 ( 8-13 scope limit ) + 20 kg - 20 W
+                                  # 3 as 2 + avoid unsafe
+                                  # 4 as 3 + FCR
+                                  # 5 as 4 + ( 6-12 scope limit )
+                                                                    
 assign   consider_smoothness    1 # 1 as default
 assign   allow_traffic_penalty  1 # 1 as default
 
@@ -87,6 +78,45 @@ assign   ignore_cycle_barrier 1 # a cycle barrier has no effect with the default
 # new in 2.7
 assign    debug      false 
 assign    debugcost  5.0
+
+# # new in 2.7
+# BEGIN  - Internal parareters for hills = 6 - experimental avoiding of too steep hills 
+# via strongly penalizing uphillcostfactor
+# ***) = See also https://github.com/poutnikl/Brouter-profiles/wiki/Glossary
+
+assign   TooSteepUphill         8.0  # slope below this uphill limit ( % ) has no penalization
+assign   TooSteepbufferreduce   5.0  # The width of the uphill scope transient zone                                        
+
+assign   TooSteepUphillCost     80.0  # can be used optionally, but is rather overrun by the uphillcostfactor. 
+
+assign   TooSteepCostFactor     200 # for uphill scope > TooSteepUphill + TooSteepbufferreduce                                     
+                                    # with the transient zone TooSteepUphill .. TooSteepUphill + TooSteepbufferreduce
+                                    
+assign   TooSteepPenaltybuffer  12.0 # higher than default 5 to filter SRTM artefacts
+assign   TooSteepMaxbuffer      20.0 # higher than default 10 to filter SRTM artefacts
+
+# END  - Internal parareters for hills = 6 - experimental avoiding of too steep hills via strongly penalizing uphillcostfactor
+
+# == Travel_mode - parameter overriding begin (v2.7)
+
+assign hills
+	if ( equal Travel_Mode 1 ) then 2 else
+	if ( greater Travel_Mode 1 ) then 6 else	hills
+	
+assign totalMass 
+	if ( equal Travel_Mode 1 ) then ( add totalMass 10 ) else
+	if ( greater Travel_Mode 1 ) then ( add totalMass 20  ) else	totalMass
+	
+assign bikerPower 
+	if ( equal Travel_Mode 1 ) then ( sub bikerPower 10 ) else
+	if ( greater Travel_Mode 1 ) then ( sub bikerPower 20  ) else	bikerPower
+	
+assign avoid_unsafe     if ( greater Travel_Mode 2 ) then true else	avoid_unsafe
+assign cycleroutes_pref if ( greater Travel_Mode 3 ) then 0.5 else	cycleroutes_pref #FCR
+assign TooSteepUphill	    if ( equal   Travel_Mode 5 ) then 6 else TooSteepUphill         #Not too steep 6-12
+assign TooSteepbufferreduce	if ( equal   Travel_Mode 5 ) then 6 else TooSteepbufferreduce   #Not too steep 6-12
+
+# == Travel_mode - parameter overriding end
 
 # refactored for tandem profile generation
 
@@ -399,18 +429,11 @@ assign univ_factor_coef_raw
     ( switch ispaved 0.25 switch isunpaved -0.25 0.0 )
 
 
-# UCF = UCFR + UFA - UFA * UCF * UCF
+# UCF = UCFR + UFA - UFA * UCFR * UCFR
 
-assign univ_factor_coef 
-    if equal UnifactorAdjust 0.0 then
-      univ_factor_coef_raw 
-    else
-      sub add univ_factor_coef_raw
-              UnifactorAdjust
-          multiply UnifactorAdjust
-                   multiply univ_factor_coef_raw
-                            univ_factor_coef_raw
-          
+assign univ_factor_coef   if equal UnifactorAdjust 0.0 then  univ_factor_coef_raw else
+                          sub ( add univ_factor_coef_raw  UnifactorAdjust )
+                              ( multiply UnifactorAdjust multiply univ_factor_coef_raw univ_factor_coef_raw )
 
 assign nonpath_penalty = 
     if    equal path_preference 0.0    then 0.0 # nonpath_penalty inactive
@@ -427,28 +450,18 @@ assign nonpath_penalty =
                   then 0.15
         else 0.0
 
-assign MTB_factor_for_road
-    if  ( equal MTB_factor 0.0 ) then 
-       0.0
-    else
-       multiply MTB_factor  univ_factor_coef
+assign MTB_factor_for_road  if  ( equal MTB_factor 0.0 ) then     0.0
+                            else  multiply MTB_factor  univ_factor_coef
 
 assign abs_univ_factor
-    if lesser univ_factor_coef 0.0 then
-        multiply -1.0 univ_factor_coef
-    else
-        univ_factor_coef 
+    if lesser univ_factor_coef 0.0 then  multiply -1.0 univ_factor_coef
+                                   else  univ_factor_coef 
 
 assign smallpaved_factor_for_road
-    if  ( equal smallpaved_factor 0.0 )
-       then 0.0 
-       else multiply
-           abs_smallpaved_factor
-           ( if  positive_smallpaved_factor then
-               abs_univ_factor
-           else
-              ( sub 1.0 abs_univ_factor )  
-           )
+    if  ( equal smallpaved_factor 0.0 ) then 0.0 else 
+    multiply  abs_smallpaved_factor
+              if  positive_smallpaved_factor then abs_univ_factor  else ( sub 1.0 abs_univ_factor )  
+           
 
 # bend /MTB_SP_tweaks                                             
                                              
