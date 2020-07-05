@@ -33,12 +33,18 @@ assign   isbike_for_mainroads   true # default=true / if false then bike friendl
 assign   path_preference        0.0 # 0.0 as default, try 0-20, see ***)
 assign   UnifactorAdjust        0.0 # 0.0 as default, Use value let says -0.75..+0.75. 
 assign   tandem_mode            0 # 0 as default, changing it increases pushpenalty, haulpenalty, dismountpenalty below
-assign   Travel_Mode            0 # 0 as default
-                                  # 1 as hills 2 + 10 kg - 10 W, 
-                                  # 2 as hills 6 ( 8-13 scope limit ) + 20 kg - 20 W
-                                  # 3 as 2 + avoid unsafe
-                                  # 4 as 3 + FCR
-                                  # 5 as 4 + ( 6-12 scope limit )
+assign   Travel_Mode            add 0 add 0 add 0 add 0 add 0 add 0 add 0 add 0 add 0 0
+                                  # 0 as default, optins are additive as 2^N numbers
+                                  # options marked by the same +)-like mark are mutually exclusive
+                                  # 1 as hills 2 ( 1/80 uphill 0.5/80 downhill ) +)
+                                  # 2 as +20 kg and -15 Watts as heavy load expedition mode
+                                  # 4 as hills 6 (NotTooSteepMode) +) ( default 8-13% transition slope)
+                                  # 8 as avoid_unsafe
+                                  # 16 as FCR ++)
+                                  # 32 as LCR ++)
+                                  # 64 as NCN ++)
+                                  # 128 as ICN ++)
+                                  # 
                                                                     
 assign   consider_smoothness    1 # 1 as default
 assign   allow_traffic_penalty  1 # 1 as default
@@ -84,14 +90,11 @@ assign    debugcost  5.0
 # via strongly penalizing uphillcostfactor
 # ***) = See also https://github.com/poutnikl/Brouter-profiles/wiki/Glossary
 
-assign   TooSteepUphill         8.0  # slope below this uphill limit ( % ) has no penalization
-assign   TooSteepbufferreduce   5.0  # The width of the uphill scope transient zone                                        
-
+assign   TooSteepUphill         11.0  # slope below this uphill limit ( % ) has no penalization
+assign   TooSteepbufferreduce   2.0  # The width of the uphill scope transient zone                                        
 assign   TooSteepUphillCost     80.0  # can be used optionally, but is rather overrun by the uphillcostfactor. 
-
-assign   TooSteepCostFactor     200 # for uphill scope > TooSteepUphill + TooSteepbufferreduce                                     
+assign   TooSteepCostFactor     9999 # for uphill scope > TooSteepUphill + TooSteepbufferreduce                                     
                                     # with the transient zone TooSteepUphill .. TooSteepUphill + TooSteepbufferreduce
-                                    
 assign   TooSteepPenaltybuffer  12.0 # higher than default 5 to filter SRTM artefacts
 assign   TooSteepMaxbuffer      20.0 # higher than default 10 to filter SRTM artefacts
 
@@ -99,22 +102,31 @@ assign   TooSteepMaxbuffer      20.0 # higher than default 10 to filter SRTM art
 
 # == Travel_mode - parameter overriding begin (v2.7)
 
-assign hills
-	if ( equal Travel_Mode 1 ) then 2 else
-	if ( greater Travel_Mode 1 ) then 6 else	hills
+assign tm_icn not lesser Travel_Mode 128
+assign Travel_Mode sub Travel_Mode ( switch tm_icn 128 0 )
+assign tm_ncn not lesser Travel_Mode 64
+assign Travel_Mode sub Travel_Mode ( switch tm_ncn 64 0 )
+assign tm_lcr not lesser Travel_Mode 32
+assign Travel_Mode sub Travel_Mode ( switch tm_lcr 32 0 )
+assign tm_fcr not lesser Travel_Mode 16
+assign Travel_Mode sub Travel_Mode ( switch tm_fcr 16 0 )
+assign tm_aa  not lesser Travel_Mode 8
+assign Travel_Mode sub Travel_Mode ( switch tm_aa 8 0 )
+assign tm_h6  not lesser Travel_Mode 4
+assign Travel_Mode sub Travel_Mode ( switch tm_h6 4 0 )
+assign tm_mass  not lesser Travel_Mode 2
+assign Travel_Mode sub Travel_Mode ( switch tm_mass 2 0 )
+assign tm_h2  not lesser Travel_Mode 1
+assign Travel_Mode sub Travel_Mode ( switch tm_h2 1 0 )
+
+assign hills      if tm_h6   then 6 else if tm_h2 then 2 else hills
+assign totalMass  if tm_mass then ( add totalMass 20 ) else	totalMass
+assign bikerPower if tm_mass then ( sub bikerPower 15 ) else	bikerPower
 	
-assign totalMass 
-	if ( equal Travel_Mode 1 ) then ( add totalMass 10 ) else
-	if ( greater Travel_Mode 1 ) then ( add totalMass 20  ) else	totalMass
-	
-assign bikerPower 
-	if ( equal Travel_Mode 1 ) then ( sub bikerPower 10 ) else
-	if ( greater Travel_Mode 1 ) then ( sub bikerPower 20  ) else	bikerPower
-	
-assign avoid_unsafe     if ( greater Travel_Mode 2 ) then true else	avoid_unsafe
-assign cycleroutes_pref if ( greater Travel_Mode 3 ) then 0.5 else	cycleroutes_pref #FCR
-assign TooSteepUphill	    if ( equal   Travel_Mode 5 ) then 6 else TooSteepUphill         #Not too steep 6-12
-assign TooSteepbufferreduce	if ( equal   Travel_Mode 5 ) then 6 else TooSteepbufferreduce   #Not too steep 6-12
+assign avoid_unsafe         if tm_aa then true else	avoid_unsafe
+assign cycleroutes_pref     switch tm_icn 5.0 switch tm_ncn 2.0 switch tm_lcr 0.8 switch tm_fcr 0.5 cycleroutes_pref
+assign TooSteepUphill	    if tm_h6 then 8 else TooSteepUphill         #Not too steep
+assign TooSteepbufferreduce	if tm_h6 then 5 else TooSteepbufferreduce   #Not too steep
 
 # == Travel_mode - parameter overriding end
 
