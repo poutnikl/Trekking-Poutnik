@@ -36,14 +36,15 @@ assign   tandem_mode            0 # 0 as default, changing it increases pushpena
 assign   Travel_Mode            add 0 add 0 add 0 add 0 add 0 add 0 add 0 add 0 add 0 0
                                   # 0 as default, optins are additive as 2^N numbers
                                   # options marked by the same +)-like mark are mutually exclusive
+                                  # options marked by the same x)-like mark are additive
                                   # 1 as hills 2 ( 1/80 uphill 0.5/80 downhill ) +)
                                   # 2 as +20 kg and -15 Watts as heavy load expedition mode
                                   # 4 as hills 6 (NotTooSteepMode) +) ( default 8-13% transition slope)
                                   # 8 as avoid_unsafe
-                                  # 16 as FCR ++)
-                                  # 32 as LCR ++)
-                                  # 64 as NCN ++)
-                                  # 128 as ICN ++)
+                                  # 16 as cycleroutes_pref = 0.5 x)
+                                  # 32 as cycleroutes_pref = 1.0 x)
+                                  # 64 as cycleroutes_pref = 2.0 x)
+                                  # 128 as cycleroutes_pref = 4.0 x)
                                   # 
                                                                     
 assign   consider_smoothness    1 # 1 as default
@@ -124,7 +125,12 @@ assign totalMass  if tm_mass then ( add totalMass 20 ) else	totalMass
 assign bikerPower if tm_mass then ( sub bikerPower 15 ) else	bikerPower
 	
 assign avoid_unsafe         if tm_aa then true else	avoid_unsafe
-assign cycleroutes_pref     switch tm_icn 5.0 switch tm_ncn 2.0 switch tm_lcr 0.8 switch tm_fcr 0.5 cycleroutes_pref
+assign tm_crpaux = add 0.0 
+                   add switch tm_icn 4.0 0.0 
+                   add switch tm_ncn 2.0 0.0
+                   add switch tm_lcr 1.0 0.0
+                       switch tm_fcr 0.5 0.0 
+assign cycleroutes_pref     if ( greater tm_crpaux 0.0 ) then tm_crpaux else cycleroutes_pref
 assign TooSteepUphill	    if tm_h6 then 8 else TooSteepUphill         #Not too steep
 assign TooSteepbufferreduce	if tm_h6 then 5 else TooSteepbufferreduce   #Not too steep
 
@@ -274,7 +280,7 @@ assign isbike_candidate or bicycle=yes|permissive|designated or hascycleway
 assign isbike and ( or ( not ismainroad ) isbike_for_mainroads )  isbike_candidate
 
 
-assign ispaved surface=paved|asphalt|concrete|paving_stones
+assign ispaved surface=paved|asphalt|concrete|paving_stones|metal|wood  #metal, wood added in v2.7
 assign isunpaved not or surface= or ispaved or surface=fine_gravel surface=cobblestone
 
 assign probablyGood or ispaved  and isbike not isunpaved  #probably good surface - weather independent
