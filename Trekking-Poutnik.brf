@@ -125,11 +125,8 @@ assign totalMass  if tm_mass then ( add totalMass 20 ) else	totalMass
 assign bikerPower if tm_mass then ( sub bikerPower 15 ) else	bikerPower
 	
 assign avoid_unsafe         if tm_aa then true else	avoid_unsafe
-assign tm_crpaux = add 0.0 
-                   add switch tm_icn 4.0 0.0 
-                   add switch tm_ncn 2.0 0.0
-                   add switch tm_lcr 1.0 0.0
-                       switch tm_fcr 0.5 0.0 
+assign tm_crpaux = add switch tm_icn 4.0 0.0   add switch tm_ncn 2.0 0.0
+                   add switch tm_lcr 1.0 0.0       switch tm_fcr 0.5 0.0 
 assign cycleroutes_pref     if ( greater tm_crpaux 0.0 ) then tm_crpaux else cycleroutes_pref
 assign TooSteepUphill	    if tm_h6 then 8 else TooSteepUphill         #Not too steep
 assign TooSteepbufferreduce	if tm_h6 then 5 else TooSteepbufferreduce   #Not too steep
@@ -171,7 +168,7 @@ assign   downhillcostvalue      switch equal hills 1 60   switch equal hills 2 8
 
 assign   Flat_Penalty         if NoFlatMode then 1.5 else 0.0
 
-assign   validForBikes        1
+
 
 # positive smallpaved factor effect subtracts itself from MTB factor effect
 # on MTB-like OSM way preference and elevation effect attenuation
@@ -296,6 +293,8 @@ assign nosurface or surface= surface=unknown
 assign nosurfacenortracktype and nosurface tracktype=
 assign ishard or ispaved surface=cobblestone|sett|compacted|fine_gravel|gravel|pebblestone  
 assign issoft not or nosurface ishard
+
+assign isresidentialorliving = or highway=residential|living_street living_street=yes
 
 # bend /wayvariables
 
@@ -493,7 +492,7 @@ assign highwayclass_basefactor
         switch highway=track 1.0 switch highway=path 1.1 switch highway=footway  1.2  1.0  # highway=road 
      else 
         switch highway=pedestrian 2.0 switch highway=bridleway 3.0
-        switch highway=cycleway   1.0 switch highway=residential|living_street   1.0
+        switch highway=cycleway   1.0 switch isresidentialorliving   1.0
         switch highway=service    1.1 cost_of_unknown 
   
   
@@ -707,7 +706,7 @@ assign priorityclassifier =
   else if ( highway=tertiary                  ) then  22
   else if ( highway=tertiary_link             ) then  21
   else if ( highway=unclassified              ) then  20
-  else if ( highway=residential|living_street ) then  6
+  else if ( isresidentialorliving             ) then  6
   else if ( highway=service                   ) then  6
   else if ( highway=cycleway                  ) then  6
   else if ( bicycle=designated                ) then  6
@@ -725,7 +724,7 @@ assign isgoodoneway = if reversedirection=yes then oneway=-1
 assign isroundabout = junction=roundabout
 assign islinktype = highway=motorway_link|trunk_link|primary_link|secondary_link|tertiary_link
 assign isgoodforcars = if greater priorityclassifier 6 then true
-                  else if highway=residential|living_street|service then true
+                  else if ( or isresidentialorliving  highway=service ) then true
                   else if ( and highway=track tracktype=grade1 ) then true
                   else false
 
