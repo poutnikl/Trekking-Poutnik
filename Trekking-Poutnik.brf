@@ -68,7 +68,7 @@ assign C_r        = 0.01   # %C_r% | Rolling resistance coefficient (dimensionle
 assign bikerPower = 100    # %bikerPower% | Average power (in W) provided by the biker, for travel time computation | number
 
 # Turn instructions settings
-assign turnInstructionMode          = 1     # %turnInstructionMode% | Mode for the generated turn instructions | [0=none, 1=auto-choose, 2=locus-style, 3=osmand-style]
+assign turnInstructionMode          = 1     # %turnInstructionMode% | Mode for the generated turn instructions | [0=none, 1=auto-choose, 2=locus-style, 3=osmand-style, 4=comment-style, 5=gpsies-style, 6=orux-style]
 assign turnInstructionCatchingRange = 20    # %turnInstructionCatchingRange% | Within this distance (in m) several turning instructions are combined into one and the turning angles are better approximated to the general direction | number
 assign turnInstructionRoundabouts   = true  # %turnInstructionRoundabouts% | Set to "false" to avoid generating special turning instructions for roundabouts | boolean
 
@@ -280,7 +280,7 @@ assign isbike and ( or ( not ismainroad ) isbike_for_mainroads )  isbike_candida
 assign ispaved surface=paved|asphalt|concrete|paving_stones|metal|wood  #metal, wood added in v2.7
 assign isunpaved not or surface= or ispaved or surface=fine_gravel surface=cobblestone
 
-assign probablyGood or ispaved  and isbike not isunpaved  #probably good surface - weather independent
+assign probablyGood = or ispaved and ( or isbike highway=footway ) not isunpaved  #probably good surface - weather independent
 
 assign turncost  if  ismainroad  then 90    else if ispaved then 60   else 30 
 # Turn cost is based solely on estimation of road speediness and eventual time cost of turning, partially promoting tracks )
@@ -309,7 +309,8 @@ assign bikeaccess =
        if nodeaccessgranted then true
        else if hascycleway then true
        else if bicycle= then   (  if bicycle_road=yes then true else
-                                  if vehicle= then defaultaccess  else not vehicle=private|no   )
+                                  if vehicle= then ( if highway=footway then false else defaultaccess ) 
+                                  else not vehicle=private|no   )
                         else  not bicycle=private|no|dismount  
 
 assign footaccess =
