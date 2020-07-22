@@ -271,7 +271,7 @@ assign hascycleway = not
   and ( or cycleway= cycleway=no|none ) and ( or cycleway:left= cycleway:left=no ) ( or cycleway:right= cycleway:right=no )
   
 #2.6.* inserted originalisbike option                                      
-assign isbike_candidate or bicycle=yes|permissive|designated or hascycleway
+assign isbike_candidate or bicycle_road=yes or bicycle=yes|permissive|designated or hascycleway
         if originalisbike then lcn=yes else nodeaccessgranted 
 
 assign isbike and ( or ( not ismainroad ) isbike_for_mainroads )  isbike_candidate
@@ -308,7 +308,8 @@ assign defaultaccess =
 assign bikeaccess =
        if nodeaccessgranted then true
        else if hascycleway then true
-       else if bicycle= then   (  if vehicle= then defaultaccess  else not vehicle=private|no   )
+       else if bicycle= then   (  if bicycle_road=yes then true else
+                                  if vehicle= then defaultaccess  else not vehicle=private|no   )
                         else  not bicycle=private|no|dismount  
 
 assign footaccess =
@@ -709,7 +710,7 @@ assign priorityclassifier =
   else if ( isresidentialorliving             ) then  6
   else if ( highway=service                   ) then  6
   else if ( highway=cycleway                  ) then  6
-  else if ( bicycle=designated                ) then  6
+  else if ( or bicycle=designated bicycle_road=yes  ) then  6
   else if ( highway=track                     ) then if tracktype=grade1 then 6 else 4
   else if ( highway=bridleway|road|path|footway ) then  4
   else if ( highway=steps                     ) then  2
