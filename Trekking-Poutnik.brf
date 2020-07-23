@@ -244,8 +244,8 @@ assign   ford_initialcost_node = if ( equal ford_handling_coef million ) then mi
                                  multiply c_ford_initialcost_node ford_handling_coef
 
 assign   ford_costfactor =       if ( equal ford_handling_coef million ) then 9999 else 
-                                 if ( equal ford_handling_coef 0.0 ) then 0.0 else
-                                 multiply c_ford_costfactor ford_handling_coef 
+                                 if ( equal ford_handling_coef 0.0 ) then 1.0 else
+                                 add 1.0 multiply ( sub c_ford_costfactor 1 ) ford_handling_coef 
 
 assign   UDcostON               true
 
@@ -421,7 +421,7 @@ if mtb:scale=3       then 15.0 else
 if mtb:scale=4|5|6   then 9000
                      else 0.0
 
-assign roughness_penalty max smoothness_penalty max mtb_scale_penalty  ( if ford=yes then ford_costfactor else 0 ) 
+assign roughness_penalty max smoothness_penalty max mtb_scale_penalty  ( if ford=yes then ( sub ford_costfactor 1 ) else 0 ) 
     
 # bend /roughness_penalty
 
@@ -783,7 +783,7 @@ assign initialcost =
               else if highway=stop  then 60 
               else if and highway=crossing bicycle=no then 60 
               else if and highway=crossing crossing=no then 300 # workaround affecting road routing
-              else if ( ford=yes ) then ford_initialcost_node
+              else if ( or ford=yes highway=ford ) then ford_initialcost_node
               else initial_cost_node )
             if bikeaccess then 0  else ( if footaccess then dismountpenalty else 1000000 )
 
