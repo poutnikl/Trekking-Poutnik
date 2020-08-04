@@ -299,7 +299,7 @@ assign ismuddy and is_wet
 
 assign nosurface or surface= surface=unknown
 assign nosurfacenortracktype and nosurface tracktype=
-assign ishard or ispaved surface=cobblestone|sett|compacted|fine_gravel|gravel|pebblestone  
+assign ishard or ispaved or tracktype=grade1 surface=cobblestone|sett|compacted|fine_gravel|gravel|pebblestone  
 assign issoft not or nosurface ishard
 
 assign isresidentialorliving = or highway=residential|living_street living_street=yes
@@ -673,7 +673,7 @@ assign uphillcostfactor
      costfactor
   else
      add access-penalty
-         max switch TooSteepMode  TooSteepCostFactor  1.0 
+         add switch TooSteepMode  ( sub TooSteepCostFactor 1.0 ) 0.0 
              if ValleyMode  then
                ( multiply rawcostfactor2 valley_nonflat_multiplier )
              else
