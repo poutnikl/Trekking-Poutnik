@@ -41,11 +41,6 @@ assign   Travel_Mode            add 0 add 0 add 0 add 0 add 0 add 0 add 0 add 0 
                                   # 2 as +20 kg and -15 Watts as heavy load expedition mode
                                   # 4 as hills 6 (NotTooSteepMode) +) ( default 8-13% transition slope)
                                   # 8 as avoid_unsafe
-                                  # 16 as cycleroutes_pref = 0.5 x)
-                                  # 32 as cycleroutes_pref = 1.0 x)
-                                  # 64 as cycleroutes_pref = 2.0 x)
-                                  # 128 as cycleroutes_pref = 4.0 x)
-                                  # 
                                                                     
 assign   consider_smoothness    1 # 1 as default
 assign   allow_traffic_penalty  1 # 1 as default
@@ -106,19 +101,7 @@ assign c_tm_h2 1
 assign c_tm_mass 2
 assign c_tm_h6 4
 assign c_tm_aa 8
-assign c_tm_fcr 16
-assign c_tm_lcr 32
-assign c_tm_ncn 64
-assign c_tm_icn 128
 
-assign tm_icn not lesser Travel_Mode c_tm_icn
-assign Travel_Mode sub Travel_Mode ( switch tm_icn c_tm_icn 0 )
-assign tm_ncn not lesser Travel_Mode c_tm_ncn
-assign Travel_Mode sub Travel_Mode ( switch tm_ncn c_tm_ncn 0 )
-assign tm_lcr not lesser Travel_Mode c_tm_lcr
-assign Travel_Mode sub Travel_Mode ( switch tm_lcr c_tm_lcr 0 )
-assign tm_fcr not lesser Travel_Mode c_tm_fcr
-assign Travel_Mode sub Travel_Mode ( switch tm_fcr c_tm_fcr 0 )
 assign tm_aa  not lesser Travel_Mode c_tm_aa
 assign Travel_Mode sub Travel_Mode ( switch tm_aa c_tm_aa 0 )
 assign tm_h6  not lesser Travel_Mode c_tm_h6
@@ -133,9 +116,6 @@ assign totalMass  if tm_mass then ( add totalMass 20 ) else	totalMass
 assign bikerPower if tm_mass then ( sub bikerPower 15 ) else	bikerPower
 	
 assign avoid_unsafe         if tm_aa then true else	avoid_unsafe
-assign tm_crpaux = add switch tm_icn 4.0 0.0   add switch tm_ncn 2.0 0.0
-                   add switch tm_lcr 1.0 0.0       switch tm_fcr 0.5 0.0 
-assign cycleroutes_pref     if ( greater tm_crpaux 0.0 ) then tm_crpaux else cycleroutes_pref
 assign TooSteepUphill	    if tm_h6 then 8 else TooSteepUphill         #Not too steep
 assign TooSteepbufferreduce	if tm_h6 then 5 else TooSteepbufferreduce   #Not too steep
 
