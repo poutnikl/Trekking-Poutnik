@@ -121,12 +121,6 @@ assign TooSteepbufferreduce	if tm_h6 then 5 else TooSteepbufferreduce   #Not too
 
 # == Travel_mode - parameter overriding end
 
-# refactored for tandem profile generation
-
-assign   pushpenalty            switch tandem_mode 6   4   # added to the costfactor where cycling is not allowed
-assign   dismountpenalty        switch tandem_mode 250 100 # added to initialcost of a way or node when forced to get off bike
-assign   haulpenalty            switch tandem_mode 500 40  # added to costfactor where the bike needs to be lifted and carried
-
 #new in 2.5.12
 
 assign   NoFlatMode             equal hills 5
@@ -157,6 +151,9 @@ assign   downhillcostvalue      switch equal hills 1 60   switch equal hills 2 8
 assign   Flat_Penalty         if NoFlatMode then 1.5 else 0.0
 
 
+# ==============================================
+# =====    Road preference processing      =====
+# ==============================================
 
 # positive smallpaved factor effect subtracts itself from MTB factor effect
 # on MTB-like OSM way preference and elevation effect attenuation
@@ -173,7 +170,11 @@ assign   abs_smallpaved_factor       multiply ( switch positive_smallpaved_facto
 assign   MTB_hillcostfactor   multiply 0.3333 Hill_factor 
                   # It changes hillcosts to be 0.0 at Hill_factor = 3.0 and twice at -3.0
                   # Hill_factor 1..-1 leads hillcost to decrease e.g. from 60 to 40 / increase from 60 to 80
-                  
+
+# ==============================================
+# =====     Elevation   processing         =====
+# ==============================================
+               
 assign   downhillcost if ( consider_elevation  )  then  ( multiply ( sub 1.0 MTB_hillcostfactor  ) downhillcostvalue ) else 0
 assign   uphillcost   if ( consider_elevation  )  then ( 
              if  TooSteepMode then uphillcostvalue  else ( multiply ( sub 1.0 MTB_hillcostfactor  ) uphillcostvalue ) )
@@ -193,6 +194,16 @@ assign   elevationbufferreduce  if ValleyMode then 0.0
                                 else if TooSteepMode then TooSteepbufferreduce
                                 else ( multiply 0.333 max uphillcutoff downhillcutoff ) # 0.0 is trekking default
 
+# ==============================================
+# =====     tandem mode related penalties  =====
+# ==============================================
+
+                               
+assign   pushpenalty            switch tandem_mode 6   4   # added to the costfactor where cycling is not allowed
+assign   dismountpenalty        switch tandem_mode 250 100 # added to initialcost of a way or node when forced to get off bike
+assign   haulpenalty            switch tandem_mode 500 40  # added to costfactor where the bike needs to be lifted and carried
+
+
 assign   uphillCFshift     0.0 # experimental shifting of up/downhillcostfactors as alternative way of 
 assign   downhillCFshift   0.0 # prioritizing/penalizing of up/downhills, based on length, not elevation
 
@@ -203,6 +214,10 @@ assign   use_proposed_cn        1 # 0 as default, considers proposed cycle netwo
 
 assign   unsafe_penalty_value 1.0 # 1 - was 2 in Trekking, but this may cause U-like safe routes
 assign   cost_of_unknown      2.0 # 2 as default, cost of highway=
+
+# ==============================================
+# =====   Ford crossing global data        =====
+# ==============================================
 
 assign   c_ford_initialcost_node = 500
 assign   c_ford_initialcost_way  = 1000
@@ -233,9 +248,11 @@ assign   ncncoef  max 0 min 1 multiply cycleroutes_pref 0.2
 assign   lcncoef  max 0 min 1 multiply cycleroutes_pref 1.0
 
 # bend /global
+
 # bstart /way
 ---context:way   # following code refers to way-tags
 # bstart /wayvariables
+
 assign isicn route_bicycle_icn=yes
 assign isncn or route_bicycle_ncn=yes ncn=yes 
 assign isrcn or route_bicycle_rcn=yes rcn=yes
