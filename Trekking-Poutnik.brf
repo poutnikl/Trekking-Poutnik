@@ -62,6 +62,13 @@ assign S_C_x      = 0.225  # %S_C_x% | Drag coefficient times the reference area
 assign C_r        = 0.01   # %C_r% | Rolling resistance coefficient (dimensionless), for travel time computation | number
 assign bikerPower = 100    # %bikerPower% | Average power (in W) provided by the biker, for travel time computation | number
 
+# ----- profile kinematic model modifications
+
+assign bikermass 90
+assign bikemass  14
+assign luggagemass 20
+assign bikerPowerDrop 15
+
 # Turn instructions settings
 assign turnInstructionMode          = 1     # %turnInstructionMode% | Mode for the generated turn instructions | [0=none, 1=auto-choose, 2=locus-style, 3=osmand-style, 4=comment-style, 5=gpsies-style, 6=orux-style]
 assign turnInstructionCatchingRange = 20    # %turnInstructionCatchingRange% | Within this distance (in m) several turning instructions are combined into one and the turning angles are better approximated to the general direction | number
@@ -112,8 +119,8 @@ assign tm_h2  not lesser Travel_Mode c_tm_h2
 assign Travel_Mode sub Travel_Mode ( switch tm_h2 c_tm_h2 0 )
 
 assign hills      if tm_h6   then 6 else if tm_h2 then 2 else hills
-assign totalMass  if tm_mass then ( add totalMass 20 ) else	totalMass
-assign bikerPower if tm_mass then ( sub bikerPower 15 ) else	bikerPower
+assign totalMass  add bikemass add bikermass ( switch tm_mass luggagemass 0 )
+assign bikerPower sub bikerPower ( switch tm_mass bikerPowerDrop 0 )
 	
 assign avoid_unsafe         if tm_aa then true else	avoid_unsafe
 assign TooSteepUphill	    if tm_h6 then 8 else TooSteepUphill         #Not too steep
@@ -159,7 +166,6 @@ assign   Flat_Penalty         if NoFlatMode then 1.5 else 0.0
 # on MTB-like OSM way preference and elevation effect attenuation
 
 #v2.5.14 assign   MTBminusSP_factor           sub MTB_factor ( max 0 smallpaved_factor )  - pre v2.5.14
-
 #v2.5.14
 assign   Hill_factor            min 3 max -3 sub MTB_factor smallpaved_factor              
 assign   Road_factor            min 3 max -3 ( sub ( sub 0.0 MTB_factor ) smallpaved_factor )
@@ -194,12 +200,17 @@ assign   elevationbufferreduce  if ValleyMode then 0.0
                                 else if TooSteepMode then TooSteepbufferreduce
                                 else ( multiply 0.333 max uphillcutoff downhillcutoff ) # 0.0 is trekking default
 
-# ==============================================
-# =====     tandem mode related penalties  =====
-# ==============================================
+# ======================================================
+# ===== pushing and tandem mode related penalties  =====
+# ======================================================
 
-                               
-assign   pushpenalty            switch tandem_mode 6   4   # added to the costfactor where cycling is not allowed
+assign   pushpenaltydefault     6
+assign   pushpenaltytandemdefault     6
+assign   pushpenaltySensitivity 1.0
+assign   pushpenaltyRoadHill    max 1 add pushpenaltydefault multiply pushpenaltySensitivity multiply 0.5 ( sub Road_factor Hill_factor  )
+                        
+assign   pushpenalty            switch tandem_mode max pushpenaltyRoadHill pushpenaltytandemdefault 
+                                                   pushpenaltyRoadHill   # added to the costfactor where cycling is not allowed
 assign   dismountpenalty        switch tandem_mode 250 100 # added to initialcost of a way or node when forced to get off bike
 assign   haulpenalty            switch tandem_mode 500 40  # added to costfactor where the bike needs to be lifted and carried
 
