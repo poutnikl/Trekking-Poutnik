@@ -93,10 +93,10 @@ assign    debugcost  5.0
 # via strongly penalizing uphillcostfactor
 # ***) = See also https://github.com/poutnikl/Brouter-profiles/wiki/Glossary
 
-assign   TooSteepUphill         11.0  # slope below this uphill limit ( % ) has no penalization
-assign   TooSteepbufferreduce   2.0  # The width of the uphill scope transient zone                                        
+assign   TooSteepUphill         5.0  # slope below this uphill limit ( % ) has no penalization
+assign   TooSteepbufferreduce   7.0  # The width of the uphill scope transient zone                                        
 assign   TooSteepUphillCost     80.0  # can be used optionally, but is rather overrun by the uphillcostfactor. 
-assign   TooSteepCostFactor     9999 # for uphill scope > TooSteepUphill + TooSteepbufferreduce                                     
+assign   TooSteepCostFactor     20 # for uphill scope > TooSteepUphill + TooSteepbufferreduce                                     
                                     # with the transient zone TooSteepUphill .. TooSteepUphill + TooSteepbufferreduce
 assign   TooSteepPenaltybuffer  12.0 # higher than default 5 to filter SRTM artefacts
 assign   TooSteepMaxbuffer      20.0 # higher than default 10 to filter SRTM artefacts
