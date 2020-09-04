@@ -772,13 +772,13 @@ assign defaultaccess =
        else true
 
 assign bikeaccess =
-       if nodeaccessgranted=yes then true
+       if highway=crossing then (  or not bicycle=no|dismount way:noCrossingPenalty  )
+       else if nodeaccessgranted=yes then true
        else if bicycle= then
        (
          if vehicle= then defaultaccess
          else not vehicle=private|no
        )
-       else if highway=crossing then (  or not bicycle=no|dismount way:noCrossingPenalty  )
        else not bicycle=private|no|dismount
 
 assign footaccess =
