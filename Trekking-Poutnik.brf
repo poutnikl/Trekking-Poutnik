@@ -312,6 +312,8 @@ assign issoft not or nosurface ishard
 
 assign isresidentialorliving = or highway=residential|living_street living_street=yes
 
+assign noCrossingPenalty = and not hascycleway ( or ismainroad highway=residential|living_street|service )
+
 # bend /wayvariables
 
 # bstart /wayaccess
@@ -776,6 +778,7 @@ assign bikeaccess =
          if vehicle= then defaultaccess
          else not vehicle=private|no
        )
+       else if highway=crossing then (  or not bicycle=no|dismount way:noCrossingPenalty  )
        else not bicycle=private|no|dismount
 
 assign footaccess =
@@ -789,7 +792,6 @@ assign initialcost =
                   ( add ( switch bikeaccess dismountpenalty 0 ) haulpenalty )
               else if highway=traffic_signals then 120
               else if highway=stop  then 60 
-              else if and highway=crossing bicycle=no then 60 
               else if and highway=crossing crossing=no then 300 # workaround affecting road routing
               else if ( or ford=yes highway=ford ) then ford_initialcost_node
               else initial_cost_node )
