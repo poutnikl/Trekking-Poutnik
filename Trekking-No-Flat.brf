@@ -159,7 +159,7 @@ assign accesspenalty =
 # to push your bike)
 #
 assign oneway =
-       if oneway= then junction=roundabout else oneway=yes|true|1
+       if oneway= then junction=roundabout else oneway=yes|1
 
 assign onewaypenalty =
        if ( if reversedirection=yes then oneway else oneway=-1 ) then
